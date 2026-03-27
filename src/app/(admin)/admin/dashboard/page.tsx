@@ -3,7 +3,6 @@ import { AdminSidebar } from "@/components/Admin/AdminSidebar";
 export default function AdminPage() {
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
-      <AdminSidebar />
       <main className="flex-1 p-8">
         <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
           Hello World

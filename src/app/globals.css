@@ -81,6 +81,19 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --admin-sidebar-bg: #FAFAF8;
+  --admin-sidebar-bg-secondary: #F5F4F0;
+  --admin-sidebar-fg: #1A1A18;
+  --admin-sidebar-fg-muted: #7A7A74;
+  --admin-sidebar-accent: #C9A227;
+  --admin-sidebar-accent-soft: #F5EFC6;
+  --admin-sidebar-border: #E5E4E0;
+  --admin-sidebar-card: #FFFFFF;
+  --admin-sidebar-success: #4A7C59;
+  --admin-sidebar-warning: #B8860B;
+  --admin-sidebar-danger: #9B4444;
+  --admin-sidebar-font-display: 'Cormorant Garamond', serif;
+  --admin-sidebar-font-sans: 'Outfit', sans-serif;
 }
 
 .dark {
