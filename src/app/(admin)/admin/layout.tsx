@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { AdminSidebar } from "@/components/Admin/AdminSidebar";
 
 export default async function AdminLayout({
   children,
@@ -15,5 +16,12 @@ export default async function AdminLayout({
     redirect("/sign-in");
   }
 
-  return <>{children}</>;
+  return (
+    <div className="flex min-h-screen">
+      <AdminSidebar />
+      <main className="flex-1 ml-[260px]">
+        {children}
+      </main>
+    </div>
+  );
 }
