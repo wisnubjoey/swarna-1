@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
 import styles from "./AdminSidebar.module.css";
 
@@ -74,7 +75,7 @@ export function AdminSidebar() {
         </div>
 
         {navItems.map((item) => (
-          <a
+          <Link
             key={item.name}
             href={item.href}
             className={`${styles.navItem} ${pathname === item.href ? styles.navItemActive : ""}`}
@@ -84,39 +85,39 @@ export function AdminSidebar() {
             {item.badge && (
               <span className={styles.navItemBadge}>{item.badge}</span>
             )}
-          </a>
+          </Link>
         ))}
 
         <div className={styles.navSectionCategory}>
           <p className={styles.navSectionCategoryText}>Analytics</p>
         </div>
 
-        <a href="/admin/reports" className={styles.navItem}>
+        <Link href="/admin/reports" className={styles.navItem}>
           <svg className={styles.navItemIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
           </svg>
           <span className={styles.navText}>Reports</span>
-        </a>
+        </Link>
 
-        <a href="/admin/performance" className={styles.navItem}>
+        <Link href="/admin/performance" className={styles.navItem}>
           <svg className={styles.navItemIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
           </svg>
           <span className={styles.navText}>Performance</span>
-        </a>
+        </Link>
 
         <div className={styles.navSectionCategory}>
           <p className={styles.navSectionCategoryText}>Settings</p>
         </div>
 
-        <a href="/admin/settings" className={styles.navItem}>
+        <Link href="/admin/settings" className={styles.navItem}>
           <svg className={styles.navItemIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
           </svg>
           <span className={styles.navText}>Settings</span>
-        </a>
+        </Link>
       </nav>
 
       {/* User Section */}

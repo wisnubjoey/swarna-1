@@ -1,0 +1,4262 @@
+This file is a merged representation of a subset of the codebase, containing specifically included files, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of a subset of the repository's contents that is considered the most important context.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Only files matching these patterns are included: src/**/*, package.json
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+src/
+  app/
+    (admin)/
+      admin/
+        blank/
+          page.tsx
+        dashboard/
+          page.tsx
+        products/
+          page.tsx
+        layout.tsx
+    (auth)/
+      sign-in/
+        page.tsx
+      sign-up/
+        page.tsx
+    api/
+      auth/
+        [...all]/
+          route.ts
+    favicon.ico
+    globals.css
+    layout.tsx
+    page.tsx
+  components/
+    Admin/
+      admin.html
+      Admin.module.css
+      Admin.tsx
+      AdminSidebar.module.css
+      AdminSidebar.tsx
+    Landing/
+      Landing.module.css
+      Landing.tsx
+    ui/
+      button.tsx
+  db/
+    Product.ts
+    schema.ts
+  lib/
+    auth-client.ts
+    auth-schema.ts
+    auth.ts
+    utils.ts
+  index.tsx
+  middleware.ts
+package.json
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="src/app/(admin)/admin/products/page.tsx">
+export default function ProductsPage() {
+  return (
+    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
+      Products Page
+    </div>
+  );
+}
+</file>
+
+<file path="src/db/Product.ts">
+import { 
+  pgTable, 
+  text, 
+  integer, 
+  decimal, 
+  timestamp, 
+  varchar, 
+  pgEnum 
+} from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
+
+export const genderEnum = pgEnum("gender", ["female", "male", "unisex"]);
+export const statusEnum = pgEnum("status", ["active", "draft", "archived"]);
+
+export const categories = pgTable("categories", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  slug: varchar("slug", { length: 100 }).notNull().unique(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const products = pgTable("products", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  sku: varchar("sku", { length: 100 }).notNull().unique(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  categoryId: text("category_id")
+    .notNull()
+    .references(() => categories.id, { onDelete: "restrict" }),
+  price: decimal("price", { precision: 12, scale: 2 }).notNull(),
+  stockQuantity: integer("stock_quantity").default(0).notNull(),
+  material: varchar("material", { length: 100 }),
+  color: varchar("color", { length: 50 }),
+  size: varchar("size", { length: 20 }),
+  styleType: varchar("style_type", { length: 100 }),
+  gender: genderEnum("gender").notNull(),
+  mainImageUrl: text("main_image_url"),
+  status: statusEnum("status").default("draft").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .notNull()
+    .$onUpdate(() => new Date()),
+});
+
+export const categoryRelations = relations(categories, ({ many }) => ({
+  products: many(products),
+}));
+
+export const productRelations = relations(products, ({ one }) => ({
+  category: one(categories, {
+    fields: [products.categoryId],
+    references: [categories.id],
+  }),
+}));
+</file>
+
+<file path="src/app/(auth)/sign-in/page.tsx">
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
+import Link from "next/link";
+
+export default function SignInPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    const { error } = await authClient.signIn.email(
+      {
+        email,
+        password,
+      },
+      {
+        onRequest: () => {
+          setLoading(true);
+        },
+        onSuccess: () => {
+          router.push("/");
+        },
+        onError: (ctx) => {
+          setError(ctx.error.message);
+          setLoading(false);
+        },
+      }
+    );
+
+    if (error) {
+      setError(error?.message ?? "An error occurred");
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-md w-full mx-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              Sign In
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-2">
+              Welcome back! Please sign in to continue.
+            </p>
+          </div>
+
+          <form onSubmit={handleSignIn} className="space-y-6">
+            <div>
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                placeholder="you@example.com"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                placeholder="••••••••"
+              />
+            </div>
+
+            {error && (
+              <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm p-3 rounded-md">
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-2 px-4 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              {loading ? "Signing in..." : "Sign In"}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-gray-600 dark:text-gray-400">
+              Don&apos;t have an account?{" "}
+              <Link
+                href="/sign-up"
+                className="text-blue-600 hover:text-blue-700 dark:text-blue-400 font-medium"
+              >
+                Sign up
+              </Link>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="src/app/(auth)/sign-up/page.tsx">
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
+import Link from "next/link";
+
+export default function SignUpPage() {
+  const router = useRouter();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    const { error } = await authClient.signUp.email(
+      {
+        name,
+        email,
+        password,
+      },
+      {
+        onRequest: () => {
+          setLoading(true);
+        },
+        onSuccess: () => {
+          router.push("/");
+        },
+        onError: (ctx) => {
+          setError(ctx.error.message);
+          setLoading(false);
+        },
+      }
+    );
+
+    if (error) {
+      setError(error?.message ?? "An error occurred");
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-md w-full mx-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              Sign Up
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-2">
+              Create an account to get started.
+            </p>
+          </div>
+
+          <form onSubmit={handleSignUp} className="space-y-6">
+            <div>
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
+                Name
+              </label>
+              <input
+                id="name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                placeholder="John Doe"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                placeholder="you@example.com"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                placeholder="••••••••"
+              />
+            </div>
+
+            {error && (
+              <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm p-3 rounded-md">
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-2 px-4 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              {loading ? "Creating account..." : "Sign Up"}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-gray-600 dark:text-gray-400">
+              Already have an account?{" "}
+              <Link
+                href="/sign-in"
+                className="text-blue-600 hover:text-blue-700 dark:text-blue-400 font-medium"
+              >
+                Sign in
+              </Link>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="src/app/api/auth/[...all]/route.ts">
+import { auth } from "../../../../lib/auth";
+import { toNextJsHandler } from "better-auth/next-js";
+export const { GET, POST } = toNextJsHandler(auth.handler);
+</file>
+
+<file path="src/components/Admin/admin.html">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard | Traditional Dress</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Outfit:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #FAFAF8;
+      --bg-secondary: #F5F4F0;
+      --fg: #1A1A18;
+      --fg-muted: #7A7A74;
+      --accent: #C9A227;
+      --accent-soft: #F5EFC6;
+      --border: #E5E4E0;
+      --card: #FFFFFF;
+      --success: #4A7C59;
+      --warning: #B8860B;
+      --danger: #9B4444;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      border-radius: 0 !important;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: var(--bg);
+      color: var(--fg);
+      overflow-x: hidden;
+    }
+
+    .font-display {
+      font-family: 'Cormorant Garamond', serif;
+    }
+
+    /* Subtle grain texture */
+    .grain-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      opacity: 0.02;
+      z-index: 9999;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 260px;
+      transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .sidebar.collapsed {
+      width: 80px;
+    }
+
+    .sidebar.collapsed .nav-text,
+    .sidebar.collapsed .logo-text,
+    .sidebar.collapsed .user-info {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .sidebar.collapsed .nav-item {
+      justify-content: center;
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    /* Nav item hover */
+    .nav-item {
+      position: relative;
+      transition: all 0.3s ease;
+    }
+
+    .nav-item::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 3px;
+      background-color: var(--accent);
+      transform: scaleY(0);
+      transition: transform 0.3s ease;
+    }
+
+    .nav-item:hover::before,
+    .nav-item.active::before {
+      transform: scaleY(1);
+    }
+
+    .nav-item:hover,
+    .nav-item.active {
+      background-color: var(--bg-secondary);
+    }
+
+    /* Card hover */
+    .stat-card {
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px -12px rgba(26, 26, 24, 0.1);
+    }
+
+    /* Table row hover */
+    .table-row {
+      transition: background-color 0.2s ease;
+    }
+
+    .table-row:hover {
+      background-color: var(--bg-secondary);
+    }
+
+    /* Progress bar animation */
+    .progress-bar {
+      animation: progressFill 1.5s ease-out forwards;
+    }
+
+    @keyframes progressFill {
+      from { width: 0; }
+    }
+
+    /* Chart bar animation */
+    .chart-bar {
+      transform-origin: bottom;
+      animation: chartGrow 0.8s ease-out forwards;
+    }
+
+    @keyframes chartGrow {
+      from { transform: scaleY(0); }
+      to { transform: scaleY(1); }
+    }
+
+    /* Staggered animation */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.6s ease-out forwards;
+    }
+
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+    .delay-4 { animation-delay: 0.4s; }
+    .delay-5 { animation-delay: 0.5s; }
+
+    /* Focus states */
+    button:focus-visible,
+    a:focus-visible,
+    input:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--fg-muted);
+    }
+
+    /* Status indicators */
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* Button styles */
+    .btn-primary {
+      background-color: var(--fg);
+      color: var(--bg);
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--accent);
+    }
+
+    .btn-outline {
+      border: 1px solid var(--border);
+      background: transparent;
+      transition: all 0.3s ease;
+    }
+
+    .btn-outline:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Dropdown */
+    .dropdown-menu {
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all 0.3s ease;
+    }
+
+    .dropdown.open .dropdown-menu {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    /* Mini chart sparkline */
+    .sparkline {
+      stroke-dasharray: 100;
+      stroke-dashoffset: 100;
+      animation: drawLine 2s ease-out forwards;
+    }
+
+    @keyframes drawLine {
+      to { stroke-dashoffset: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="grain-overlay"></div>
+
+  <div class="flex min-h-screen">
+    <!-- Sidebar -->
+    <aside class="sidebar fixed left-0 top-0 h-full bg-[var(--card)] border-r border-[var(--border)] z-50 flex flex-col">
+      <!-- Logo -->
+      <div class="h-16 flex items-center px-6 border-b border-[var(--border)]">
+        <span class="text-[var(--accent)] text-2xl font-display">
+          <span class="font-semibold">T</span><span class="logo-text font-light">RADITIONAL</span>
+        </span>
+      </div>
+
+      <!-- Navigation -->
+      <nav class="flex-1 py-6 overflow-y-auto">
+        <div class="px-4 mb-4">
+          <p class="nav-text text-xs tracking-widest uppercase text-[var(--fg-muted)] px-2">Main</p>
+        </div>
+        
+        <a href="#" class="nav-item active flex items-center gap-4 px-6 py-3 text-sm font-light">
+          <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+          </svg>
+          <span class="nav-text">Dashboard</span>
+        </a>
+
+        <a href="#" class="nav-item flex items-center gap-4 px-6 py-3 text-sm font-light text-[var(--fg-muted)]">
+          <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+          </svg>
+          <span class="nav-text">Products</span>
+        </a>
+
+        <a href="#" class="nav-item flex items-center gap-4 px-6 py-3 text-sm font-light text-[var(--fg-muted)]">
+          <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+          </svg>
+          <span class="nav-text">Orders</span>
+          <span class="nav-text ml-auto bg-[var(--accent)] text-white text-xs px-2 py-0.5">12</span>
+        </a>
+
+        <a href="#" class="nav-item flex items-center gap-4 px-6 py-3 text-sm font-light text-[var(--fg-muted)]">
+          <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+          </svg>
+          <span class="nav-text">Artisans</span>
+        </a>
+
+        <div class="px-4 mt-8 mb-4">
+          <p class="nav-text text-xs tracking-widest uppercase text-[var(--fg-muted)] px-2">Analytics</p>
+        </div>
+
+        <a href="#" class="nav-item flex items-center gap-4 px-6 py-3 text-sm font-light text-[var(--fg-muted)]">
+          <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+          </svg>
+          <span class="nav-text">Reports</span>
+        </a>
+
+        <a href="#" class="nav-item flex items-center gap-4 px-6 py-3 text-sm font-light text-[var(--fg-muted)]">
+          <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
+          </svg>
+          <span class="nav-text">Performance</span>
+        </a>
+
+        <div class="px-4 mt-8 mb-4">
+          <p class="nav-text text-xs tracking-widest uppercase text-[var(--fg-muted)] px-2">Settings</p>
+        </div>
+
+        <a href="#" class="nav-item flex items-center gap-4 px-6 py-3 text-sm font-light text-[var(--fg-muted)]">
+          <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          <span class="nav-text">Settings</span>
+        </a>
+      </nav>
+
+      <!-- User Section -->
+      <div class="p-4 border-t border-[var(--border)]">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-[var(--bg-secondary)] flex items-center justify-center">
+            <span class="font-display text-lg">YK</span>
+          </div>
+          <div class="user-info flex-1 min-w-0">
+            <p class="text-sm font-light truncate">Yamamoto Kimiko</p>
+            <p class="text-xs text-[var(--fg-muted)]">Administrator</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 ml-[260px] transition-[margin] duration-400" id="mainContent">
+      <!-- Header -->
+      <header class="h-16 bg-[var(--card)] border-b border-[var(--border)] sticky top-0 z-40">
+        <div class="h-full px-6 flex items-center justify-between">
+          <!-- Left -->
+          <div class="flex items-center gap-4">
+            <button id="sidebarToggle" class="w-10 h-10 flex items-center justify-center hover:bg-[var(--bg-secondary)] transition-colors" aria-label="Toggle sidebar">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/>
+              </svg>
+            </button>
+            
+            <!-- Search -->
+            <div class="relative">
+              <input 
+                type="text" 
+                placeholder="Search..." 
+                class="w-64 bg-[var(--bg)] border border-[var(--border)] pl-10 pr-4 py-2 text-sm font-light focus:border-[var(--accent)] focus:outline-none transition-colors"
+                aria-label="Search"
+              >
+              <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--fg-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Right -->
+          <div class="flex items-center gap-2">
+            <!-- Notifications -->
+            <div class="dropdown relative">
+              <button class="dropdown-trigger w-10 h-10 flex items-center justify-center hover:bg-[var(--bg-secondary)] transition-colors relative" aria-label="Notifications">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                </svg>
+                <span class="absolute top-2 right-2 w-2 h-2 bg-[var(--accent)]"></span>
+              </button>
+              
+              <div class="dropdown-menu absolute right-0 top-full mt-2 w-80 bg-[var(--card)] border border-[var(--border)] shadow-lg z-50">
+                <div class="p-4 border-b border-[var(--border)]">
+                  <p class="text-sm font-medium">Notifications</p>
+                </div>
+                <div class="max-h-64 overflow-y-auto">
+                  <a href="#" class="block p-4 border-b border-[var(--border)] hover:bg-[var(--bg-secondary)] transition-colors">
+                    <p class="text-sm font-light">New order received from Kyoto Gallery</p>
+                    <p class="text-xs text-[var(--fg-muted)] mt-1">2 minutes ago</p>
+                  </a>
+                  <a href="#" class="block p-4 border-b border-[var(--border)] hover:bg-[var(--bg-secondary)] transition-colors">
+                    <p class="text-sm font-light">Inventory alert: Silk Kimono low stock</p>
+                    <p class="text-xs text-[var(--fg-muted)] mt-1">1 hour ago</p>
+                  </a>
+                  <a href="#" class="block p-4 hover:bg-[var(--bg-secondary)] transition-colors">
+                    <p class="text-sm font-light">Artisan Chen completed embroidery order</p>
+                    <p class="text-xs text-[var(--fg-muted)] mt-1">3 hours ago</p>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Profile -->
+            <div class="dropdown relative ml-2">
+              <button class="dropdown-trigger flex items-center gap-2 py-2 px-3 hover:bg-[var(--bg-secondary)] transition-colors">
+                <div class="w-8 h-8 bg-[var(--fg)] flex items-center justify-center">
+                  <span class="text-[var(--bg)] text-sm">YK</span>
+                </div>
+                <svg class="w-4 h-4 text-[var(--fg-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </button>
+              
+              <div class="dropdown-menu absolute right-0 top-full mt-2 w-48 bg-[var(--card)] border border-[var(--border)] shadow-lg z-50">
+                <a href="#" class="block px-4 py-3 text-sm font-light hover:bg-[var(--bg-secondary)] transition-colors">Profile Settings</a>
+                <a href="#" class="block px-4 py-3 text-sm font-light hover:bg-[var(--bg-secondary)] transition-colors">Billing</a>
+                <hr class="border-[var(--border)]">
+                <a href="#" class="block px-4 py-3 text-sm font-light text-[var(--danger)] hover:bg-[var(--bg-secondary)] transition-colors">Sign Out</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Page Content -->
+      <div class="p-6 lg:p-8">
+        <!-- Page Title -->
+        <div class="mb-8 fade-in">
+          <div class="flex items-center gap-2 text-sm text-[var(--fg-muted)] mb-2">
+            <span>Home</span>
+            <span>/</span>
+            <span class="text-[var(--accent)]">Dashboard</span>
+          </div>
+          <h1 class="font-display text-3xl font-light">Overview</h1>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <!-- Stat Card 1 -->
+          <div class="stat-card bg-[var(--card)] border border-[var(--border)] p-6 fade-in delay-1">
+            <div class="flex items-start justify-between mb-4">
+              <div class="w-10 h-10 bg-[var(--bg-secondary)] flex items-center justify-center">
+                <svg class="w-5 h-5 text-[var(--fg-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </div>
+              <span class="text-xs text-[var(--success)] flex items-center gap-1">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+                </svg>
+                12.5%
+              </span>
+            </div>
+            <p class="text-sm text-[var(--fg-muted)] mb-1">Total Revenue</p>
+            <p class="font-display text-3xl font-light">$48,294</p>
+            <div class="mt-4 h-12">
+              <svg viewBox="0 0 100 40" class="w-full h-full">
+                <polyline class="sparkline" fill="none" stroke="var(--accent)" stroke-width="1.5" points="0,35 15,30 30,32 45,20 60,25 75,15 100,10"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Stat Card 2 -->
+          <div class="stat-card bg-[var(--card)] border border-[var(--border)] p-6 fade-in delay-2">
+            <div class="flex items-start justify-between mb-4">
+              <div class="w-10 h-10 bg-[var(--bg-secondary)] flex items-center justify-center">
+                <svg class="w-5 h-5 text-[var(--fg-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                </svg>
+              </div>
+              <span class="text-xs text-[var(--success)] flex items-center gap-1">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+                </svg>
+                8.2%
+              </span>
+            </div>
+            <p class="text-sm text-[var(--fg-muted)] mb-1">Total Orders</p>
+            <p class="font-display text-3xl font-light">1,847</p>
+            <div class="mt-4 h-12">
+              <svg viewBox="0 0 100 40" class="w-full h-full">
+                <polyline class="sparkline" fill="none" stroke="var(--accent)" stroke-width="1.5" points="0,25 15,28 30,20 45,25 60,18 75,22 100,12"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Stat Card 3 -->
+          <div class="stat-card bg-[var(--card)] border border-[var(--border)] p-6 fade-in delay-3">
+            <div class="flex items-start justify-between mb-4">
+              <div class="w-10 h-10 bg-[var(--bg-secondary)] flex items-center justify-center">
+                <svg class="w-5 h-5 text-[var(--fg-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                </svg>
+              </div>
+              <span class="text-xs text-[var(--danger)] flex items-center gap-1">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+                </svg>
+                3.1%
+              </span>
+            </div>
+            <p class="text-sm text-[var(--fg-muted)] mb-1">Products</p>
+            <p class="font-display text-3xl font-light">324</p>
+            <div class="mt-4">
+              <div class="flex items-center gap-2">
+                <div class="flex-1 h-1.5 bg-[var(--bg-secondary)]">
+                  <div class="progress-bar h-full bg-[var(--accent)]" style="width: 72%"></div>
+                </div>
+                <span class="text-xs text-[var(--fg-muted)]">72% active</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stat Card 4 -->
+          <div class="stat-card bg-[var(--card)] border border-[var(--border)] p-6 fade-in delay-4">
+            <div class="flex items-start justify-between mb-4">
+              <div class="w-10 h-10 bg-[var(--bg-secondary)] flex items-center justify-center">
+                <svg class="w-5 h-5 text-[var(--fg-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+              </div>
+              <span class="text-xs text-[var(--success)] flex items-center gap-1">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+                </svg>
+                2 new
+              </span>
+            </div>
+            <p class="text-sm text-[var(--fg-muted)] mb-1">Artisans</p>
+            <p class="font-display text-3xl font-light">127</p>
+            <div class="mt-4 flex -space-x-2">
+              <div class="w-6 h-6 bg-[var(--bg-secondary)] border-2 border-[var(--card)] flex items-center justify-center text-xs">K</div>
+              <div class="w-6 h-6 bg-[var(--accent-soft)] border-2 border-[var(--card)] flex items-center justify-center text-xs">C</div>
+              <div class="w-6 h-6 bg-[var(--bg-secondary)] border-2 border-[var(--card)] flex items-center justify-center text-xs">Y</div>
+              <div class="w-6 h-6 bg-[var(--fg)] border-2 border-[var(--card)] flex items-center justify-center text-xs text-[var(--bg)]">+5</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="grid lg:grid-cols-3 gap-6">
+          <!-- Chart Section -->
+          <div class="lg:col-span-2 bg-[var(--card)] border border-[var(--border)] p-6 fade-in delay-3">
+            <div class="flex items-center justify-between mb-6">
+              <div>
+                <h2 class="font-display text-xl font-light">Revenue Overview</h2>
+                <p class="text-sm text-[var(--fg-muted)] mt-1">Monthly performance</p>
+              </div>
+              <div class="flex gap-2">
+                <button class="tab-btn px-4 py-2 text-xs tracking-wide uppercase bg-[var(--fg)] text-[var(--bg)] transition-colors" data-tab="monthly">Monthly</button>
+                <button class="tab-btn px-4 py-2 text-xs tracking-wide uppercase text-[var(--fg-muted)] hover:bg-[var(--bg-secondary)] transition-colors" data-tab="weekly">Weekly</button>
+              </div>
+            </div>
+
+            <!-- Chart -->
+            <div class="h-64 flex items-end gap-3 pt-8" id="chart">
+              <div class="flex-1 flex flex-col items-center">
+                <div class="chart-bar w-full bg-[var(--accent)]" style="height: 45%; animation-delay: 0.1s"></div>
+                <span class="text-xs text-[var(--fg-muted)] mt-3">Jan</span>
+              </div>
+              <div class="flex-1 flex flex-col items-center">
+                <div class="chart-bar w-full bg-[var(--accent)]" style="height: 62%; animation-delay: 0.15s"></div>
+                <span class="text-xs text-[var(--fg-muted)] mt-3">Feb</span>
+              </div>
+              <div class="flex-1 flex flex-col items-center">
+                <div class="chart-bar w-full bg-[var(--accent)]" style="height: 38%; animation-delay: 0.2s"></div>
+                <span class="text-xs text-[var(--fg-muted)] mt-3">Mar</span>
+              </div>
+              <div class="flex-1 flex flex-col items-center">
+                <div class="chart-bar w-full bg-[var(--accent)]" style="height: 75%; animation-delay: 0.25s"></div>
+                <span class="text-xs text-[var(--fg-muted)] mt-3">Apr</span>
+              </div>
+              <div class="flex-1 flex flex-col items-center">
+                <div class="chart-bar w-full bg-[var(--accent)]" style="height: 55%; animation-delay: 0.3s"></div>
+                <span class="text-xs text-[var(--fg-muted)] mt-3">May</span>
+              </div>
+              <div class="flex-1 flex flex-col items-center">
+                <div class="chart-bar w-full bg-[var(--accent)]" style="height: 88%; animation-delay: 0.35s"></div>
+                <span class="text-xs text-[var(--fg-muted)] mt-3">Jun</span>
+              </div>
+              <div class="flex-1 flex flex-col items-center">
+                <div class="chart-bar w-full bg-[var(--accent)]" style="height: 72%; animation-delay: 0.4s"></div>
+                <span class="text-xs text-[var(--fg-muted)] mt-3">Jul</span>
+              </div>
+              <div class="flex-1 flex flex-col items-center">
+                <div class="chart-bar w-full bg-[var(--fg)]" style="height: 95%; animation-delay: 0.45s"></div>
+                <span class="text-xs text-[var(--fg-muted)] mt-3">Aug</span>
+              </div>
+              <div class="flex-1 flex flex-col items-center">
+                <div class="chart-bar w-full bg-[var(--border)]" style="height: 40%; animation-delay: 0.5s"></div>
+                <span class="text-xs text-[var(--fg-muted)] mt-3">Sep</span>
+              </div>
+              <div class="flex-1 flex flex-col items-center">
+                <div class="chart-bar w-full bg-[var(--border)]" style="height: 30%; animation-delay: 0.55s"></div>
+                <span class="text-xs text-[var(--fg-muted)] mt-3">Oct</span>
+              </div>
+              <div class="flex-1 flex flex-col items-center">
+                <div class="chart-bar w-full bg-[var(--border)]" style="height: 25%; animation-delay: 0.6s"></div>
+                <span class="text-xs text-[var(--fg-muted)] mt-3">Nov</span>
+              </div>
+              <div class="flex-1 flex flex-col items-center">
+                <div class="chart-bar w-full bg-[var(--border)]" style="height: 20%; animation-delay: 0.65s"></div>
+                <span class="text-xs text-[var(--fg-muted)] mt-3">Dec</span>
+              </div>
+            </div>
+
+            <!-- Legend -->
+            <div class="flex items-center gap-6 mt-6 pt-6 border-t border-[var(--border)]">
+              <div class="flex items-center gap-2">
+                <div class="w-3 h-3 bg-[var(--accent)]"></div>
+                <span class="text-xs text-[var(--fg-muted)]">Completed</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="w-3 h-3 bg-[var(--fg)]"></div>
+                <span class="text-xs text-[var(--fg-muted)]">Current</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="w-3 h-3 bg-[var(--border)]"></div>
+                <span class="text-xs text-[var(--fg-muted)]">Projected</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Activity Feed -->
+          <div class="bg-[var(--card)] border border-[var(--border)] p-6 fade-in delay-4">
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="font-display text-xl font-light">Recent Activity</h2>
+              <a href="#" class="text-xs text-[var(--accent)] hover:underline">View all</a>
+            </div>
+
+            <div class="space-y-6">
+              <div class="flex gap-4">
+                <div class="w-10 h-10 bg-[var(--accent-soft)] flex-shrink-0 flex items-center justify-center">
+                  <svg class="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                  </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-light">New order #1247 received</p>
+                  <p class="text-xs text-[var(--fg-muted)] mt-1">Kyoto Gallery - 2 min ago</p>
+                </div>
+              </div>
+
+              <div class="flex gap-4">
+                <div class="w-10 h-10 bg-[var(--bg-secondary)] flex-shrink-0 flex items-center justify-center">
+                  <svg class="w-5 h-5 text-[var(--fg-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 13l4 4L19 7"/>
+                  </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-light">Order #1243 completed</p>
+                  <p class="text-xs text-[var(--fg-muted)] mt-1">Tokyo Museum - 15 min ago</p>
+                </div>
+              </div>
+
+              <div class="flex gap-4">
+                <div class="w-10 h-10 bg-[var(--bg-secondary)] flex-shrink-0 flex items-center justify-center">
+                  <svg class="w-5 h-5 text-[var(--fg-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                  </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-light">New artisan registered</p>
+                  <p class="text-xs text-[var(--fg-muted)] mt-1">Mei Lin - Embroidery - 1 hr ago</p>
+                </div>
+              </div>
+
+              <div class="flex gap-4">
+                <div class="w-10 h-10 bg-[var(--bg-secondary)] flex-shrink-0 flex items-center justify-center">
+                  <svg class="w-5 h-5 text-[var(--fg-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                  </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-light">Product restocked</p>
+                  <p class="text-xs text-[var(--fg-muted)] mt-1">Silk Kimono Collection - 2 hrs ago</p>
+                </div>
+              </div>
+
+              <div class="flex gap-4">
+                <div class="w-10 h-10 bg-[var(--bg-secondary)] flex-shrink-0 flex items-center justify-center">
+                  <svg class="w-5 h-5 text-[var(--fg-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+                  </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-light">New customer inquiry</p>
+                  <p class="text-xs text-[var(--fg-muted)] mt-1">Osaka Boutique - 3 hrs ago</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Orders Table -->
+        <div class="mt-6 bg-[var(--card)] border border-[var(--border)] fade-in delay-5">
+          <div class="p-6 border-b border-[var(--border)] flex items-center justify-between">
+            <div>
+              <h2 class="font-display text-xl font-light">Recent Orders</h2>
+              <p class="text-sm text-[var(--fg-muted)] mt-1">Latest transactions</p>
+            </div>
+            <div class="flex gap-2">
+              <button class="btn-outline px-4 py-2 text-xs tracking-wide uppercase">
+                Export
+              </button>
+              <button class="btn-primary px-4 py-2 text-xs tracking-wide uppercase">
+                New Order
+              </button>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-[var(--bg-secondary)]">
+                <tr>
+                  <th class="text-left px-6 py-4 text-xs tracking-wide uppercase font-medium text-[var(--fg-muted)]">Order ID</th>
+                  <th class="text-left px-6 py-4 text-xs tracking-wide uppercase font-medium text-[var(--fg-muted)]">Customer</th>
+                  <th class="text-left px-6 py-4 text-xs tracking-wide uppercase font-medium text-[var(--fg-muted)]">Product</th>
+                  <th class="text-left px-6 py-4 text-xs tracking-wide uppercase font-medium text-[var(--fg-muted)]">Amount</th>
+                  <th class="text-left px-6 py-4 text-xs tracking-wide uppercase font-medium text-[var(--fg-muted)]">Status</th>
+                  <th class="text-left px-6 py-4 text-xs tracking-wide uppercase font-medium text-[var(--fg-muted)]">Date</th>
+                </tr>
+              </thead>
+              <tbody id="ordersTable">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Data
+    const orders = [
+      { id: '#1247', customer: 'Kyoto Gallery', product: 'Ceremonial Kimono', amount: 2450, status: 'pending', date: '2024-01-15' },
+      { id: '#1246', customer: 'Tokyo Museum', product: 'Embroidered Obi Set', amount: 890, status: 'completed', date: '2024-01-14' },
+      { id: '#1245', customer: 'Osaka Boutique', product: 'Silk Yukata Collection', amount: 3200, status: 'shipped', date: '2024-01-14' },
+      { id: '#1244', customer: 'Nara Cultural Center', product: 'Vintage Textile Set', amount: 1850, status: 'completed', date: '2024-01-13' },
+      { id: '#1243', customer: 'Hiroshima Gallery', product: 'Artisan Kimono', amount: 4200, status: 'processing', date: '2024-01-12' },
+    ];
+
+    // Render orders table
+    const tableBody = document.getElementById('ordersTable');
+    
+    const statusStyles = {
+      pending: 'bg-[var(--accent-soft)] text-[var(--warning)]',
+      completed: 'bg-[#E8F0EA] text-[var(--success)]',
+      shipped: 'bg-[var(--bg-secondary)] text-[var(--fg)]',
+      processing: 'bg-[var(--border)] text-[var(--fg-muted)]'
+    };
+
+    orders.forEach(order => {
+      const row = document.createElement('tr');
+      row.className = 'table-row border-b border-[var(--border)]';
+      row.innerHTML = `
+        <td class="px-6 py-4">
+          <span class="font-medium">${order.id}</span>
+        </td>
+        <td class="px-6 py-4 text-sm font-light">${order.customer}</td>
+        <td class="px-6 py-4 text-sm font-light">${order.product}</td>
+        <td class="px-6 py-4 text-sm font-light">$${order.amount.toLocaleString()}</td>
+        <td class="px-6 py-4">
+          <span class="inline-block px-3 py-1 text-xs tracking-wide uppercase ${statusStyles[order.status]}">${order.status}</span>
+        </td>
+        <td class="px-6 py-4 text-sm text-[var(--fg-muted)]">${order.date}</td>
+      `;
+      tableBody.appendChild(row);
+    });
+
+    // Sidebar toggle
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebar = document.querySelector('.sidebar');
+    const mainContent = document.getElementById('mainContent');
+
+    sidebarToggle.addEventListener('click', () => {
+      sidebar.classList.toggle('collapsed');
+      if (sidebar.classList.contains('collapsed')) {
+        mainContent.style.marginLeft = '80px';
+      } else {
+        mainContent.style.marginLeft = '260px';
+      }
+    });
+
+    // Dropdown functionality
+    document.querySelectorAll('.dropdown').forEach(dropdown => {
+      const trigger = dropdown.querySelector('.dropdown-trigger');
+      
+      trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.querySelectorAll('.dropdown').forEach(d => {
+          if (d !== dropdown) d.classList.remove('open');
+        });
+        dropdown.classList.toggle('open');
+      });
+    });
+
+    // Close dropdowns on outside click
+    document.addEventListener('click', () => {
+      document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('open'));
+    });
+
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => {
+          b.classList.remove('bg-[var(--fg)]', 'text-[var(--bg)]');
+          b.classList.add('text-[var(--fg-muted)]');
+        });
+        btn.classList.remove('text-[var(--fg-muted)]');
+        btn.classList.add('bg-[var(--fg)]', 'text-[var(--bg)]');
+
+        // Animate chart bars on tab change
+        document.querySelectorAll('.chart-bar').forEach(bar => {
+          bar.style.animation = 'none';
+          bar.offsetHeight; // Trigger reflow
+          bar.style.animation = 'chartGrow 0.8s ease-out forwards';
+        });
+      });
+    });
+
+    // Nav item click
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.preventDefault();
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+      });
+    });
+
+    // Scroll reveal for fade-in elements
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -20px 0px'
+    };
+
+    const fadeObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.animationPlayState = 'running';
+        }
+      });
+    }, observerOptions);
+
+    document.querySelectorAll('.fade-in').forEach(el => {
+      el.style.animationPlayState = 'paused';
+      fadeObserver.observe(el);
+    });
+
+    // Respect reduced motion
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.querySelectorAll('.fade-in').forEach(el => {
+        el.style.opacity = '1';
+        el.style.transform = 'none';
+        el.style.animation = 'none';
+      });
+    }
+  </script>
+</body>
+</html>
+</file>
+
+<file path="src/components/Admin/Admin.module.css">
+:root {
+  --admin-bg: #FAFAF8;
+  --admin-bg-secondary: #F5F4F0;
+  --admin-fg: #1A1A18;
+  --admin-fg-muted: #7A7A74;
+  --admin-accent: #C9A227;
+  --admin-accent-soft: #F5EFC6;
+  --admin-border: #E5E4E0;
+  --admin-card: #FFFFFF;
+  --admin-success: #4A7C59;
+  --admin-warning: #B8860B;
+  --admin-danger: #9B4444;
+  --admin-font-display: 'Cormorant Garamond', serif;
+  --admin-font-sans: 'Outfit', sans-serif;
+}
+
+.adminWrapper * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  border-radius: 0 !important;
+}
+
+.adminWrapper {
+  font-family: var(--admin-font-sans) !important;
+  background-color: var(--admin-bg);
+  color: var(--admin-fg);
+  min-height: 100vh;
+}
+
+.fontDisplay {
+  font-family: var(--admin-font-display) !important;
+}
+
+/* Grain Overlay */
+.grainOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0.02;
+  z-index: 9999;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+/* Sidebar */
+.sidebar {
+  width: 260px;
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background-color: var(--admin-card);
+  border-right: 1px solid var(--admin-border);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sidebarCollapsed {
+  width: 80px;
+}
+
+.sidebarCollapsed .navText,
+.sidebarCollapsed .logoText,
+.sidebarCollapsed .userInfo {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.sidebarCollapsed .navItem {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* Navigation */
+.navItem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 300;
+  color: var(--admin-fg-muted);
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.navItem::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 3px;
+  background-color: var(--admin-accent);
+  transform: scaleY(0);
+  transition: transform 0.3s ease;
+}
+
+.navItem:hover::before,
+.navItemActive::before {
+  transform: scaleY(1);
+}
+
+.navItem:hover,
+.navItemActive {
+  background-color: var(--admin-bg-secondary);
+  color: var(--admin-fg);
+}
+
+/* Main Content */
+.main {
+  flex: 1;
+  margin-left: 260px;
+  transition: margin 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mainCollapsed {
+  margin-left: 80px;
+}
+
+/* Header */
+.header {
+  height: 4rem;
+  background-color: var(--admin-card);
+  border-bottom: 1px solid var(--admin-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+/* Stats */
+.statCard {
+  background-color: var(--admin-card);
+  border: 1px solid var(--admin-border);
+  padding: 1.5rem;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.statCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px -12px rgba(26, 26, 24, 0.1);
+}
+
+/* Table */
+.tableContainer {
+  overflow-x: auto;
+  background-color: var(--admin-card);
+  border: 1px solid var(--admin-border);
+}
+
+.tableHeader {
+  background-color: var(--admin-bg-secondary);
+  text-align: left;
+}
+
+.tableHeader th {
+  padding: 1rem 1.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--admin-fg-muted);
+}
+
+.tableRow {
+  border-bottom: 1px solid var(--admin-border);
+  transition: background-color 0.2s ease;
+}
+
+.tableRow:hover {
+  background-color: var(--admin-bg-secondary);
+}
+
+.tableRow td {
+  padding: 1rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 300;
+}
+
+/* Buttons */
+.btnPrimary {
+  background-color: var(--admin-fg);
+  color: var(--admin-bg);
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btnPrimary:hover {
+  background-color: var(--admin-accent);
+}
+
+.btnOutline {
+  background: transparent;
+  border: 1px solid var(--admin-border);
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btnOutline:hover {
+  border-color: var(--admin-accent);
+  color: var(--admin-accent);
+}
+
+/* Animations */
+.fadeIn {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.delay1 { animation-delay: 0.1s; }
+.delay2 { animation-delay: 0.2s; }
+.delay3 { animation-delay: 0.3s; }
+.delay4 { animation-delay: 0.4s; }
+.delay5 { animation-delay: 0.5s; }
+
+/* Charts */
+.chartBar {
+  transform-origin: bottom;
+  animation: chartGrow 0.8s ease-out forwards;
+}
+
+@keyframes chartGrow {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+
+.sparkline {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: drawLine 2s ease-out forwards;
+}
+
+@keyframes drawLine {
+  to { stroke-dashoffset: 0; }
+}
+</file>
+
+<file path="src/components/Admin/Admin.tsx">
+'use client';
+
+import { useState, useEffect } from 'react';
+import styles from './Admin.module.css';
+
+const orders = [
+  { id: '#1247', customer: 'Kyoto Gallery', product: 'Ceremonial Kimono', amount: 2450, status: 'pending', date: '2024-01-15' },
+  { id: '#1246', customer: 'Tokyo Museum', product: 'Embroidered Obi Set', amount: 890, status: 'completed', date: '2024-01-14' },
+  { id: '#1245', customer: 'Osaka Boutique', product: 'Silk Yukata Collection', amount: 3200, status: 'shipped', date: '2024-01-14' },
+  { id: '#1244', customer: 'Nara Cultural Center', product: 'Vintage Textile Set', amount: 1850, status: 'completed', date: '2024-01-13' },
+  { id: '#1243', customer: 'Hiroshima Gallery', product: 'Artisan Kimono', amount: 4200, status: 'processing', date: '2024-01-12' },
+];
+
+const statusStyles = {
+  pending: { bg: '#F5EFC6', color: '#B8860B' }, // accent-soft / warning
+  completed: { bg: '#E8F0EA', color: '#4A7C59' }, // success bg / success
+  shipped: { bg: '#F5F4F0', color: '#1A1A18' }, // bg-secondary / fg
+  processing: { bg: '#E5E4E0', color: '#7A7A74' } // border / fg-muted
+};
+
+export function Admin() {
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [activeTab, setActiveTab] = useState('monthly');
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+
+  useEffect(() => {
+    // Re-trigger animations on tab change if needed
+  }, [activeTab]);
+
+  return (
+    <div className={styles.adminWrapper}>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Outfit:wght@200;300;400;500;600&display=swap"
+        rel="stylesheet"
+      />
+      <div className={styles.grainOverlay}></div>
+
+      <div className="flex min-h-screen">
+        {/* Sidebar */}
+        <aside className={`${styles.sidebar} ${isSidebarCollapsed ? styles.sidebarCollapsed : ''}`}>
+          <div className="h-16 flex items-center px-6 border-b border-[var(--admin-border)]">
+            <span className={`${styles.fontDisplay} text-[var(--admin-accent)] text-2xl`}>
+              <span className="font-semibold">T</span>
+              {!isSidebarCollapsed && <span className={`${styles.logoText} font-light`}>RADITIONAL</span>}
+            </span>
+          </div>
+
+          <nav className="flex-1 py-6 overflow-y-auto">
+            <div className="px-4 mb-4">
+              <p className={`${styles.navText} text-xs tracking-widest uppercase text-[var(--admin-fg-muted)] px-2`}>
+                {!isSidebarCollapsed && 'Main'}
+              </p>
+            </div>
+            
+            <a href="#" className={`${styles.navItem} ${styles.navItemActive}`}>
+              <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+              </svg>
+              {!isSidebarCollapsed && <span className={styles.navText}>Dashboard</span>}
+            </a>
+
+            <a href="#" className={styles.navItem}>
+              <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+              </svg>
+              {!isSidebarCollapsed && <span className={styles.navText}>Products</span>}
+            </a>
+
+            <a href="#" className={styles.navItem}>
+              <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+              </svg>
+              {!isSidebarCollapsed && (
+                <>
+                  <span className={styles.navText}>Orders</span>
+                  <span className="ml-auto bg-[var(--admin-accent)] text-white text-xs px-2 py-0.5">12</span>
+                </>
+              )}
+            </a>
+
+            <div className="px-4 mt-8 mb-4">
+              <p className={`${styles.navText} text-xs tracking-widest uppercase text-[var(--admin-fg-muted)] px-2`}>
+                {!isSidebarCollapsed && 'Analytics'}
+              </p>
+            </div>
+
+            <a href="#" className={styles.navItem}>
+              <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+              </svg>
+              {!isSidebarCollapsed && <span className={styles.navText}>Reports</span>}
+            </a>
+          </nav>
+
+          <div className="p-4 border-t border-[var(--admin-border)]">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-[var(--admin-bg-secondary)] flex items-center justify-center">
+                <span className={`${styles.fontDisplay} text-lg`}>YK</span>
+              </div>
+              {!isSidebarCollapsed && (
+                <div className={`${styles.userInfo} flex-1 min-w-0`}>
+                  <p className="text-sm font-light truncate">Yamamoto Kimiko</p>
+                  <p className="text-xs text-[var(--admin-fg-muted)]">Administrator</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </aside>
+
+        {/* Main Content */}
+        <main className={`${styles.main} ${isSidebarCollapsed ? styles.mainCollapsed : ''}`}>
+          <header className={styles.header}>
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                className="w-10 h-10 flex items-center justify-center hover:bg-[var(--admin-bg-secondary)] transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+              </button>
+              
+              <div className="relative hidden md:block">
+                <input 
+                  type="text" 
+                  placeholder="Search..." 
+                  className="w-64 bg-[var(--admin-bg)] border border-[var(--admin-border)] pl-10 pr-4 py-2 text-sm font-light focus:border-[var(--admin-accent)] focus:outline-none transition-colors"
+                />
+                <svg className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--admin-fg-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <button 
+                  onClick={() => setNotificationsOpen(!notificationsOpen)}
+                  className="w-10 h-10 flex items-center justify-center hover:bg-[var(--admin-bg-secondary)] transition-colors relative"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                  </svg>
+                  <span className="absolute top-2 right-2 w-2 h-2 bg-[var(--admin-accent)]"></span>
+                </button>
+                {notificationsOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-80 bg-[var(--admin-card)] border border-[var(--admin-border)] shadow-lg z-50">
+                    <div className="p-4 border-b border-[var(--admin-border)]">
+                      <p className="text-sm font-medium">Notifications</p>
+                    </div>
+                    <div className="max-h-64 overflow-y-auto">
+                      <div className="p-4 border-b border-[var(--admin-border)] hover:bg-[var(--admin-bg-secondary)] transition-colors cursor-pointer">
+                        <p className="text-sm font-light">New order received from Kyoto Gallery</p>
+                        <p className="text-xs text-[var(--admin-fg-muted)] mt-1">2 minutes ago</p>
+                      </div>
+                      <div className="p-4 border-b border-[var(--admin-border)] hover:bg-[var(--admin-bg-secondary)] transition-colors cursor-pointer">
+                        <p className="text-sm font-light">Inventory alert: Silk Kimono low stock</p>
+                        <p className="text-xs text-[var(--admin-fg-muted)] mt-1">1 hour ago</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="relative ml-2">
+                <button 
+                  onClick={() => setProfileOpen(!profileOpen)}
+                  className="flex items-center gap-2 py-2 px-3 hover:bg-[var(--admin-bg-secondary)] transition-colors"
+                >
+                  <div className="w-8 h-8 bg-[var(--admin-fg)] flex items-center justify-center">
+                    <span className="text-[var(--admin-bg)] text-sm">YK</span>
+                  </div>
+                  <svg className="w-4 h-4 text-[var(--admin-fg-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 9l-7 7-7-7"/>
+                  </svg>
+                </button>
+                {profileOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-[var(--admin-card)] border border-[var(--admin-border)] shadow-lg z-50">
+                    <a href="#" className="block px-4 py-3 text-sm font-light hover:bg-[var(--admin-bg-secondary)] transition-colors">Profile Settings</a>
+                    <a href="#" className="block px-4 py-3 text-sm font-light hover:bg-[var(--admin-bg-secondary)] transition-colors">Billing</a>
+                    <hr className="border-[var(--admin-border)]" />
+                    <a href="#" className="block px-4 py-3 text-sm font-light text-[var(--admin-danger)] hover:bg-[var(--admin-bg-secondary)] transition-colors">Sign Out</a>
+                  </div>
+                )}
+              </div>
+            </div>
+          </header>
+
+          <div className="p-6 lg:p-8">
+            <div className={`${styles.fadeIn} mb-8`}>
+              <div className="flex items-center gap-2 text-sm text-[var(--admin-fg-muted)] mb-2">
+                <span>Home</span>
+                <span>/</span>
+                <span className="text-[var(--admin-accent)]">Dashboard</span>
+              </div>
+              <h1 className={`${styles.fontDisplay} text-3xl font-light`}>Overview</h1>
+            </div>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              {[
+                { label: 'Total Revenue', value: '$48,294', change: '+12.5%', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z', color: 'success' },
+                { label: 'Total Orders', value: '1,847', change: '+8.2%', icon: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z', color: 'success' },
+                { label: 'Products', value: '324', change: '-3.1%', icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4', color: 'danger' },
+                { label: 'Artisans', value: '127', change: '2 new', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z', color: 'success' }
+              ].map((stat, i) => (
+                <div key={i} className={`${styles.statCard} ${styles.fadeIn} ${styles[`delay${i + 1}`]}`}>
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-10 h-10 bg-[var(--admin-bg-secondary)] flex items-center justify-center">
+                      <svg className="w-5 h-5 text-[var(--admin-fg-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d={stat.icon}/>
+                      </svg>
+                    </div>
+                    <span className={`text-xs text-[var(--admin-${stat.color})] flex items-center gap-1`}>
+                      {stat.change}
+                    </span>
+                  </div>
+                  <p className="text-sm text-[var(--admin-fg-muted)] mb-1">{stat.label}</p>
+                  <p className={`${styles.fontDisplay} text-3xl font-light`}>{stat.value}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Main Grid */}
+            <div className="grid lg:grid-cols-3 gap-6">
+              {/* Chart Section */}
+              <div className={`${styles.statCard} lg:col-span-2 ${styles.fadeIn} ${styles.delay3}`}>
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className={`${styles.fontDisplay} text-xl font-light`}>Revenue Overview</h2>
+                    <p className="text-sm text-[var(--admin-fg-muted)] mt-1">Monthly performance</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => setActiveTab('monthly')}
+                      className={`${styles.btnPrimary} ${activeTab !== 'monthly' ? styles.btnOutline : ''} !py-1 !px-3`}
+                    >
+                      Monthly
+                    </button>
+                    <button 
+                      onClick={() => setActiveTab('weekly')}
+                      className={`${styles.btnPrimary} ${activeTab !== 'weekly' ? styles.btnOutline : ''} !py-1 !px-3`}
+                    >
+                      Weekly
+                    </button>
+                  </div>
+                </div>
+
+                <div className="h-64 flex items-end gap-3 pt-8">
+                  {[45, 62, 38, 75, 55, 88, 72, 95, 40, 30, 25, 20].map((height, i) => (
+                    <div key={i} className="flex-1 flex flex-col items-center">
+                      <div 
+                        className={`${styles.chartBar} w-full bg-[var(--admin-accent)]`} 
+                        style={{ height: `${height}%`, animationDelay: `${0.1 + i * 0.05}s` }}
+                      ></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Activity Feed */}
+              <div className={`${styles.statCard} ${styles.fadeIn} ${styles.delay4}`}>
+                <h2 className={`${styles.fontDisplay} text-xl font-light mb-6`}>Recent Activity</h2>
+                <div className="space-y-6">
+                  {[
+                    { title: 'New order #1247 received', desc: 'Kyoto Gallery - 2 min ago', icon: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z' },
+                    { title: 'Order #1243 completed', desc: 'Tokyo Museum - 15 min ago', icon: 'M5 13l4 4L19 7' },
+                    { title: 'New artisan registered', desc: 'Mei Lin - Embroidery - 1 hr ago', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' }
+                  ].map((activity, i) => (
+                    <div key={i} className="flex gap-4">
+                      <div className="w-10 h-10 bg-[var(--admin-bg-secondary)] flex-shrink-0 flex items-center justify-center">
+                        <svg className="w-5 h-5 text-[var(--admin-fg-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d={activity.icon}/>
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-light">{activity.title}</p>
+                        <p className="text-xs text-[var(--admin-fg-muted)] mt-1">{activity.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Orders Table */}
+            <div className={`${styles.tableContainer} mt-6 ${styles.fadeIn} ${styles.delay5}`}>
+              <div className="p-6 border-b border-[var(--admin-border)] flex items-center justify-between">
+                <div>
+                  <h2 className={`${styles.fontDisplay} text-xl font-light`}>Recent Orders</h2>
+                  <p className="text-sm text-[var(--admin-fg-muted)] mt-1">Latest transactions</p>
+                </div>
+                <div className="flex gap-2">
+                  <button className={styles.btnOutline}>Export</button>
+                  <button className={styles.btnPrimary}>New Order</button>
+                </div>
+              </div>
+
+              <table className="w-full">
+                <thead className={styles.tableHeader}>
+                  <tr>
+                    <th>Order ID</th>
+                    <th>Customer</th>
+                    <th>Product</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.map((order, i) => (
+                    <tr key={i} className={styles.tableRow}>
+                      <td><span className="font-medium">{order.id}</span></td>
+                      <td>{order.customer}</td>
+                      <td>{order.product}</td>
+                      <td>${order.amount.toLocaleString()}</td>
+                      <td>
+                        <span 
+                          className="inline-block px-3 py-1 text-xs tracking-wide uppercase"
+                          style={{ 
+                            backgroundColor: statusStyles[order.status as keyof typeof statusStyles].bg,
+                            color: statusStyles[order.status as keyof typeof statusStyles].color
+                          }}
+                        >
+                          {order.status}
+                        </span>
+                      </td>
+                      <td className="text-[var(--admin-fg-muted)]">{order.date}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="src/components/Admin/AdminSidebar.module.css">
+:root {
+  --admin-sidebar-font-display: 'Cormorant Garamond', serif;
+  --admin-sidebar-font-sans: 'Outfit', sans-serif;
+}
+
+.sidebar {
+  width: 260px;
+  height: 100vh;
+  background-color: var(--admin-sidebar-card);
+  border-right: 1px solid var(--admin-sidebar-border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 50;
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: var(--admin-sidebar-font-sans);
+}
+
+.sidebarCollapsed {
+  width: 80px;
+}
+
+.sidebarCollapsed .navText,
+.sidebarCollapsed .logoText,
+.sidebarCollapsed .userInfo {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.sidebarCollapsed .navItem {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* Logo Section */
+.logoSection {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--admin-sidebar-border);
+}
+
+.logoWrapper {
+  font-family: var(--admin-sidebar-font-display);
+  font-size: 24px;
+  color: var(--admin-sidebar-accent);
+}
+
+.logoTextStrong {
+  font-weight: 600;
+  color: var(--admin-sidebar-accent);
+}
+
+.logoTextLight {
+  font-weight: 300;
+  color: var(--admin-sidebar-accent);
+}
+
+/* Navigation */
+.navSection {
+  flex: 1;
+  padding: 24px 0;
+  overflow-y: auto;
+}
+
+.navSectionCategory {
+  padding: 0 16px;
+  margin-bottom: 16px;
+}
+
+.navSectionCategoryText {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--admin-sidebar-fg-muted);
+  padding-left: 8px;
+}
+
+.navItem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 300;
+  color: var(--admin-sidebar-fg-muted);
+  text-decoration: none;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.navItem::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 3px;
+  background-color: var(--admin-sidebar-accent);
+  transform: scaleY(0);
+  transition: transform 0.3s ease;
+}
+
+.navItem:hover::before,
+.navItemActive::before {
+  transform: scaleY(1);
+}
+
+.navItem:hover {
+  background-color: var(--admin-sidebar-bg-secondary);
+  color: var(--admin-sidebar-fg);
+}
+
+.navItemActive {
+  background-color: var(--admin-sidebar-bg-secondary);
+  color: var(--admin-sidebar-fg);
+}
+
+.navItemIcon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.navText {
+  font-size: 14px;
+  font-weight: 300;
+}
+
+.navItemBadge {
+  margin-left: auto;
+  background-color: var(--admin-sidebar-accent);
+  color: white;
+  font-size: 12px;
+  padding: 2px 8px;
+}
+
+/* User Section */
+.userSection {
+  padding: 16px;
+  border-top: 1px solid var(--admin-sidebar-border);
+}
+
+.userSectionContent {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.userAvatar {
+  width: 40px;
+  height: 40px;
+  background-color: var(--admin-sidebar-bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--admin-sidebar-font-display);
+  font-size: 18px;
+}
+
+.userInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.userName {
+  font-size: 14px;
+  font-weight: 300;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.userRole {
+  font-size: 12px;
+  color: var(--admin-sidebar-fg-muted);
+}
+
+/* Custom Scrollbar */
+.navSection::-webkit-scrollbar {
+  width: 6px;
+}
+
+.navSection::-webkit-scrollbar-track {
+  background: var(--admin-sidebar-bg);
+}
+
+.navSection::-webkit-scrollbar-thumb {
+  background: var(--admin-sidebar-border);
+}
+
+.navSection::-webkit-scrollbar-thumb:hover {
+  background: var(--admin-sidebar-fg-muted);
+}
+
+/* Focus states */
+.navItem:focus-visible {
+  outline: 2px solid var(--admin-sidebar-accent);
+  outline-offset: 2px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .navItem::before {
+    transition-duration: 0.01ms !important;
+  }
+  
+  .sidebar {
+    transition-duration: 0.01ms !important;
+  }
+}
+</file>
+
+<file path="src/components/Landing/Landing.module.css">
+:root {
+    --landing-bg: #FAFAF8;
+    --landing-bg-secondary: #F5F4F0;
+    --landing-fg: #1A1A18;
+    --landing-fg-muted: #6B6B65;
+    --landing-accent: #C9A227;
+    --landing-accent-soft: #E8D9A0;
+    --landing-border: #E5E4E0;
+    --landing-card: #FFFFFF;
+    --landing-font-display: 'Cormorant Garamond', serif;
+    --landing-font-sans: 'Outfit', sans-serif;
+  }
+  
+  .landing * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  .landing {
+    font-family: var(--landing-font-sans) !important;
+    background-color: var(--landing-bg);
+    color: var(--landing-fg);
+    overflow-x: hidden;
+  }
+  
+  .landing .font-display {
+    font-family: var(--landing-font-display) !important;
+  }
+  
+  /* Sharp edges - no border radius anywhere */
+  .landing * {
+    border-radius: 0 !important;
+  }
+  
+  /* Subtle grain texture overlay */
+  .grainOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    opacity: 0.03;
+    z-index: 1000;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  }
+  
+  /* Reveal animations */
+  .reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  
+  .reveal.active {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  .revealDelay1 { transition-delay: 0.1s; }
+  .revealDelay2 { transition-delay: 0.2s; }
+  .revealDelay3 { transition-delay: 0.3s; }
+  .revealDelay4 { transition-delay: 0.4s; }
+  
+  /* Hero text animation */
+  .heroTitle span {
+    display: inline-block;
+    opacity: 0;
+    transform: translateY(100%);
+    animation: slideUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  
+  @keyframes slideUp {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .heroTitle span:nth-child(1) { animation-delay: 0.3s; }
+  .heroTitle span:nth-child(2) { animation-delay: 0.4s; }
+  .heroTitle span:nth-child(3) { animation-delay: 0.5s; }
+  
+  /* Image hover effect */
+  .imgContainer {
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .imgContainer img {
+    transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  
+  .imgContainer:hover img {
+    transform: scale(1.05);
+  }
+  
+  .imgContainer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(26,26,24,0.4) 0%, transparent 50%);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  
+  .imgContainer:hover::after {
+    opacity: 1;
+  }
+  
+  /* Navigation line animation */
+  .navLink {
+    position: relative;
+  }
+  
+  .navLink::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background-color: var(--landing-accent);
+    transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  
+  .navLink:hover::after {
+    width: 100%;
+  }
+  
+  /* Button styles */
+  .btnPrimary {
+    background-color: var(--landing-fg);
+    color: var(--landing-bg);
+    padding: 16px 40px;
+    font-weight: 300;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    font-size: 12px;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+    display: inline-block;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  
+  .btnPrimary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background-color: var(--landing-accent);
+    transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 0;
+  }
+  
+  .btnPrimary:hover::before {
+    left: 0;
+  }
+  
+  .btnPrimary span {
+    position: relative;
+    z-index: 1;
+  }
+  
+  /* Yellow accent line */
+  .accentLine {
+    width: 60px;
+    height: 2px;
+    background-color: var(--landing-accent);
+  }
+  
+  /* Scroll indicator */
+  .scrollIndicator {
+    animation: bounce 2s infinite;
+  }
+  
+  @keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(10px); }
+    60% { transform: translateY(5px); }
+  }
+  
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .landing *, .landing *::before, .landing *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+    .reveal {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  
+  /* Focus states */
+  .landing a:focus-visible, .landing button:focus-visible {
+    outline: 2px solid var(--landing-accent);
+    outline-offset: 4px;
+  }
+  
+  /* Category card hover */
+  .categoryCard {
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  
+  .categoryCard:hover {
+    background-color: var(--landing-bg-secondary);
+  }
+  
+  .categoryCard:hover .categoryNumber {
+    color: var(--landing-accent);
+  }
+  
+  /* Parallax effect for hero */
+  .parallaxHero {
+    transform: translateY(calc(var(--scroll) * 0.3px));
+  }
+  
+  /* Navigation */
+  .navigation {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 50;
+    background-color: rgba(250, 250, 248, 0.9);
+    backdrop-filter: blur(4px);
+    border-bottom: 1px solid var(--landing-border);
+  }
+  
+  .navContent {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+  
+  @media (min-width: 1024px) {
+    .navContent {
+      padding: 0 48px;
+    }
+  }
+  
+  .navInner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 80px;
+  }
+  
+  .navLogo {
+    font-family: var(--landing-font-display);
+    font-size: 24px;
+    font-weight: 300;
+    letter-spacing: 0.05em;
+    text-decoration: none;
+    color: var(--landing-fg);
+  }
+  
+  .navLogo span {
+    color: var(--landing-accent);
+  }
+  
+  .navLinks {
+    display: none;
+    align-items: center;
+    gap: 48px;
+  }
+  
+  @media (min-width: 768px) {
+    .navLinks {
+      display: flex;
+    }
+  }
+  
+  .navLinkItem {
+    font-size: 14px;
+    font-weight: 300;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--landing-fg-muted);
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
+  
+  .navLinkItem:hover {
+    color: var(--landing-fg);
+  }
+  
+  .menuBtn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 40px;
+    height: 40px;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+  
+  @media (min-width: 768px) {
+    .menuBtn {
+      display: none;
+    }
+  }
+  
+  .menuBtn span {
+    width: 24px;
+    height: 1px;
+    background-color: var(--landing-fg);
+    transition: all 0.3s ease;
+  }
+  
+  /* Mobile Menu */
+  .mobileMenu {
+    position: fixed;
+    inset: 0;
+    background-color: var(--landing-bg);
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+  }
+  
+  .mobileMenu.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  
+  .mobileMenuContent {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+  
+  .mobileMenuLink {
+    display: block;
+    font-family: var(--landing-font-display);
+    font-size: 36px;
+    font-weight: 300;
+    color: var(--landing-fg);
+    text-decoration: none;
+  }
+  
+  /* Hero Section */
+  .heroSection {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-end;
+    padding-bottom: 80px;
+    padding-top: 128px;
+  }
+  
+  .heroBackground {
+    position: absolute;
+    inset: 0;
+  }
+  
+  .heroBackground img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .heroBackground::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, var(--landing-bg) 0%, rgba(250, 250, 248, 0.3) 50%, transparent);
+  }
+  
+  .heroBackground::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right, rgba(250, 250, 248, 0.6) 0%, transparent);
+  }
+  
+  .heroContent {
+    position: relative;
+    z-index: 10;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 24px;
+    width: 100%;
+  }
+  
+  @media (min-width: 1024px) {
+    .heroContent {
+      padding: 0 48px;
+    }
+  }
+  
+  .heroTextWrapper {
+    max-width: 768px;
+  }
+  
+  .heroTitle {
+    font-family: var(--landing-font-display);
+    font-size: 48px;
+    font-weight: 300;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--landing-fg);
+  }
+  
+  @media (min-width: 768px) {
+    .heroTitle {
+      font-size: 80px;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .heroTitle {
+      font-size: 112px;
+    }
+  }
+  
+  .heroSubtitle {
+    margin-top: 32px;
+    font-size: 18px;
+    font-weight: 300;
+    color: var(--landing-fg-muted);
+    max-width: 384px;
+    line-height: 1.6;
+  }
+  
+  @media (min-width: 768px) {
+    .heroSubtitle {
+      font-size: 20px;
+      max-width: 500px;
+    }
+  }
+  
+  .scrollIndicatorWrapper {
+    position: absolute;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  
+  .scrollIndicator svg {
+    width: 24px;
+    height: 40px;
+    color: var(--landing-fg-muted);
+  }
+  
+  /* Collection Section */
+  .collectionSection {
+    padding: 96px 0;
+    background-color: var(--landing-bg);
+  }
+  
+  @media (min-width: 768px) {
+    .collectionSection {
+      padding: 128px 0;
+    }
+  }
+  
+  .sectionContent {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+  
+  @media (min-width: 1024px) {
+    .sectionContent {
+      padding: 0 48px;
+    }
+  }
+  
+  .sectionHeader {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    margin-bottom: 64px;
+  }
+  
+  @media (min-width: 768px) {
+    .sectionHeader {
+      flex-direction: row;
+      align-items: flex-end;
+      justify-content: space-between;
+    }
+  }
+  
+  .sectionLabel {
+    font-size: 12px;
+    font-weight: 300;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--landing-accent);
+    margin-bottom: 16px;
+  }
+  
+  .sectionTitle {
+    font-family: var(--landing-font-display);
+    font-size: 36px;
+    font-weight: 300;
+  }
+  
+  @media (min-width: 768px) {
+    .sectionTitle {
+      font-size: 48px;
+    }
+  }
+  
+  .sectionDescription {
+    color: var(--landing-fg-muted);
+    font-weight: 300;
+    max-width: 384px;
+    line-height: 1.6;
+  }
+  
+  .collectionGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  
+  @media (min-width: 768px) {
+    .collectionGrid {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+    }
+  }
+  
+  .collectionItem {
+    aspect-ratio: 3/4;
+  }
+  
+  .collectionItem img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  /* Heritage Section */
+  .heritageSection {
+    padding: 96px 0;
+    background-color: var(--landing-bg-secondary);
+  }
+  
+  @media (min-width: 768px) {
+    .heritageSection {
+      padding: 128px 0;
+    }
+  }
+  
+  .heritageGrid {
+    display: grid;
+    gap: 48px;
+  }
+  
+  @media (min-width: 768px) {
+    .heritageGrid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 96px;
+      align-items: center;
+    }
+  }
+  
+  .heritageContent {
+    order: 2;
+  }
+  
+  @media (min-width: 768px) {
+    .heritageContent {
+      order: 1;
+    }
+  }
+  
+  .heritageText {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    color: var(--landing-fg-muted);
+    font-weight: 300;
+    line-height: 1.8;
+  }
+  
+  .heritageStats {
+    margin-top: 40px;
+    display: flex;
+    gap: 48px;
+  }
+  
+  .statItem {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .statNumber {
+    font-family: var(--landing-font-display);
+    font-size: 36px;
+    font-weight: 300;
+    color: var(--landing-accent);
+  }
+  
+  .statLabel {
+    font-size: 14px;
+    color: var(--landing-fg-muted);
+    margin-top: 4px;
+  }
+  
+  .heritageImage {
+    order: 1;
+  }
+  
+  @media (min-width: 768px) {
+    .heritageImage {
+      order: 2;
+    }
+  }
+  
+  .heritageImageWrapper {
+    aspect-ratio: 4/5;
+  }
+  
+  .heritageImageWrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  /* Categories Section */
+  .categoriesSection {
+    padding: 96px 0;
+    background-color: var(--landing-bg);
+  }
+  
+  @media (min-width: 768px) {
+    .categoriesSection {
+      padding: 128px 0;
+    }
+  }
+  
+  .categoriesHeader {
+    text-align: center;
+    margin-bottom: 64px;
+  }
+  
+  .categoriesGrid {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  @media (min-width: 768px) {
+    .categoriesGrid {
+      flex-direction: row;
+    }
+  }
+  
+  .categoryCard {
+    padding: 32px;
+    text-decoration: none;
+    display: block;
+  }
+  
+  @media (min-width: 768px) {
+    .categoryCard {
+      padding: 48px;
+      border-left: 1px solid var(--landing-border);
+      border-right: 1px solid var(--landing-border);
+    }
+    
+    .categoryCard:first-child {
+      border-left: none;
+    }
+    
+    .categoryCard:last-child {
+      border-right: none;
+    }
+  }
+  
+  @media (min-width: 768px) {
+    .categoriesGrid {
+      border-top: 1px solid var(--landing-border);
+      border-bottom: 1px solid var(--landing-border);
+    }
+  }
+  
+  .categoryNumber {
+    font-family: var(--landing-font-display);
+    font-size: 48px;
+    font-weight: 300;
+    color: var(--landing-border);
+    display: block;
+    margin-bottom: 24px;
+    transition: color 0.3s ease;
+  }
+  
+  .categoryTitle {
+    font-family: var(--landing-font-display);
+    font-size: 24px;
+    font-weight: 300;
+    margin-bottom: 16px;
+  }
+  
+  .categoryDescription {
+    color: var(--landing-fg-muted);
+    font-weight: 300;
+    font-size: 14px;
+    line-height: 1.8;
+  }
+  
+  /* Quote Section */
+  .quoteSection {
+    padding: 96px 0;
+    background-color: var(--landing-fg);
+  }
+  
+  @media (min-width: 768px) {
+    .quoteSection {
+      padding: 128px 0;
+    }
+  }
+  
+  .quoteContent {
+    max-width: 1024px;
+    margin: 0 auto;
+    padding: 0 24px;
+    text-align: center;
+  }
+  
+  @media (min-width: 1024px) {
+    .quoteContent {
+      padding: 0 48px;
+    }
+  }
+  
+  .quoteIcon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 32px;
+    color: var(--landing-accent);
+  }
+  
+  .quoteText {
+    font-family: var(--landing-font-display);
+    font-size: 28px;
+    font-weight: 300;
+    font-style: italic;
+    line-height: 1.6;
+    color: var(--landing-bg);
+  }
+  
+  @media (min-width: 768px) {
+    .quoteText {
+      font-size: 36px;
+    }
+  }
+  
+  .quoteAuthor {
+    display: block;
+    margin-top: 32px;
+    color: var(--landing-fg-muted);
+    font-weight: 300;
+    font-style: normal;
+  }
+  
+  /* Artisans Section */
+  .artisansSection {
+    padding: 96px 0;
+    background-color: var(--landing-bg);
+  }
+  
+  @media (min-width: 768px) {
+    .artisansSection {
+      padding: 128px 0;
+    }
+  }
+  
+  .artisansGrid {
+    display: grid;
+    gap: 24px;
+  }
+  
+  @media (min-width: 768px) {
+    .artisansGrid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  .artisanCard {
+    display: block;
+  }
+  
+  .artisanImageWrapper {
+    aspect-ratio: 16/10;
+  }
+  
+  .artisanImageWrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .artisanInfo {
+    margin-top: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  
+  .artisanName {
+    font-family: var(--landing-font-display);
+    font-size: 20px;
+    font-weight: 300;
+  }
+  
+  .artisanLocation {
+    font-size: 14px;
+    color: var(--landing-fg-muted);
+    margin-top: 4px;
+  }
+  
+  .artisanSpecialty {
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--landing-accent);
+  }
+  
+  /* Newsletter Section */
+  .newsletterSection {
+    padding: 96px 0;
+    background-color: var(--landing-bg-secondary);
+  }
+  
+  @media (min-width: 768px) {
+    .newsletterSection {
+      padding: 128px 0;
+    }
+  }
+  
+  .newsletterContent {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 0 24px;
+    text-align: center;
+  }
+  
+  @media (min-width: 1024px) {
+    .newsletterContent {
+      padding: 0 48px;
+    }
+  }
+  
+  .newsletterTitle {
+    font-family: var(--landing-font-display);
+    font-size: 36px;
+    font-weight: 300;
+    margin-bottom: 24px;
+  }
+  
+  @media (min-width: 768px) {
+    .newsletterTitle {
+      font-size: 48px;
+    }
+  }
+  
+  .newsletterDescription {
+    color: var(--landing-fg-muted);
+    font-weight: 300;
+    margin-bottom: 40px;
+    line-height: 1.6;
+  }
+  
+  .newsletterForm {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 448px;
+    margin: 0 auto;
+  }
+  
+  @media (min-width: 640px) {
+    .newsletterForm {
+      flex-direction: row;
+    }
+  }
+  
+  .newsletterInput {
+    flex: 1;
+    background-color: var(--landing-bg);
+    border: 1px solid var(--landing-border);
+    padding: 16px 24px;
+    font-size: 14px;
+    font-weight: 300;
+    font-family: inherit;
+  }
+  
+  .newsletterInput:focus {
+    outline: none;
+    border-color: var(--landing-accent);
+  }
+  
+  /* Footer */
+  .footer {
+    padding: 64px 0;
+    background-color: var(--landing-fg);
+  }
+  
+  .footerContent {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+  
+  @media (min-width: 1024px) {
+    .footerContent {
+      padding: 0 48px;
+    }
+  }
+  
+  .footerGrid {
+    display: grid;
+    gap: 48px;
+    margin-bottom: 64px;
+  }
+  
+  @media (min-width: 768px) {
+    .footerGrid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+  
+  .footerBrand {
+    grid-column: span 2;
+  }
+  
+  .footerLogo {
+    font-family: var(--landing-font-display);
+    font-size: 24px;
+    font-weight: 300;
+    letter-spacing: 0.05em;
+    text-decoration: none;
+    color: var(--landing-bg);
+  }
+  
+  .footerLogo span {
+    color: var(--landing-accent);
+  }
+  
+  .footerDescription {
+    margin-top: 24px;
+    color: var(--landing-fg-muted);
+    font-weight: 300;
+    max-width: 384px;
+    line-height: 1.8;
+  }
+  
+  .footerColumn {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .footerColumnTitle {
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--landing-accent);
+    margin-bottom: 24px;
+  }
+  
+  .footerLinks {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .footerLink {
+    color: var(--landing-bg);
+    font-weight: 300;
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
+  
+  .footerLink:hover {
+    color: var(--landing-accent);
+  }
+  
+  .footerBottom {
+    padding-top: 32px;
+    border-top: 1px solid rgba(107, 107, 101, 0.2);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+  }
+  
+  @media (min-width: 768px) {
+    .footerBottom {
+      flex-direction: row;
+    }
+  }
+  
+  .footerCopyright {
+    font-size: 14px;
+    color: var(--landing-fg-muted);
+    font-weight: 300;
+  }
+  
+  .footerLegal {
+    display: flex;
+    gap: 24px;
+  }
+  
+  .footerLegalLink {
+    font-size: 14px;
+    color: var(--landing-fg-muted);
+    font-weight: 300;
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
+  
+  .footerLegalLink:hover {
+    color: var(--landing-bg);
+  }
+</file>
+
+<file path="src/components/Landing/Landing.tsx">
+'use client';
+
+import { useEffect, useState } from 'react';
+import styles from './Landing.module.css';
+
+export function Landing() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    // Scroll reveal with IntersectionObserver
+    const revealElements = document.querySelectorAll(`.${styles.reveal}`);
+
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add(styles.active);
+        }
+      });
+    }, {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    });
+
+    revealElements.forEach((el) => revealObserver.observe(el));
+
+    // Scroll handler for parallax
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+
+    // Smooth scroll for navigation links
+    document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+      anchor.addEventListener('click', function (this: HTMLAnchorElement, e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href') as string);
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
+    });
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
+  return (
+    <div className={styles.landing}>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Outfit:wght@200;300;400;500&display=swap"
+        rel="stylesheet"
+      />
+      
+      <div className={styles.grainOverlay}></div>
+
+      {/* Navigation */}
+      <nav className={styles.navigation}>
+        <div className={styles.navContent}>
+          <div className={styles.navInner}>
+            <a href="#" className={styles.navLogo}>
+              <span>T</span>RADITIONAL
+            </a>
+
+            <div className={styles.navLinks}>
+              <a href="#collection" className={`${styles.navLinkItem} ${styles.navLink}`}>Collection</a>
+              <a href="#heritage" className={`${styles.navLinkItem} ${styles.navLink}`}>Heritage</a>
+              <a href="#artisans" className={`${styles.navLinkItem} ${styles.navLink}`}>Artisans</a>
+              <a href="#contact" className={`${styles.navLinkItem} ${styles.navLink}`}>Contact</a>
+            </div>
+
+            <button
+              id="menuBtn"
+              className={styles.menuBtn}
+              aria-label="Open menu"
+              onClick={() => setMenuOpen(!menuOpen)}
+            >
+              <span style={{ transform: menuOpen ? 'rotate(45deg) translateY(4px)' : 'none' }}></span>
+              <span style={{ transform: menuOpen ? 'rotate(-45deg) translateY(-4px)' : 'none' }}></span>
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* Mobile Menu */}
+      <div
+        id="mobileMenu"
+        className={`${styles.mobileMenu} ${menuOpen ? styles.active : ''}`}
+      >
+        <div className={styles.mobileMenuContent}>
+          <a href="#collection" className={styles.mobileMenuLink} onClick={() => setMenuOpen(false)}>Collection</a>
+          <a href="#heritage" className={styles.mobileMenuLink} onClick={() => setMenuOpen(false)}>Heritage</a>
+          <a href="#artisans" className={styles.mobileMenuLink} onClick={() => setMenuOpen(false)}>Artisans</a>
+          <a href="#contact" className={styles.mobileMenuLink} onClick={() => setMenuOpen(false)}>Contact</a>
+        </div>
+      </div>
+
+      {/* Hero Section */}
+      <section className={styles.heroSection}>
+        <div className={styles.heroBackground} style={{ transform: `translateY(${scrollY * 0.3}px)` }}>
+          <img
+            src="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=1920&q=80"
+            alt="Traditional silk dress on wooden stand"
+          />
+        </div>
+
+        <div className={styles.heroContent}>
+          <div className={styles.heroTextWrapper}>
+            <div className={styles.accentLine}></div>
+            <h1 className={styles.heroTitle}>
+              <span>TRADITIONAL</span><br />
+              <span className="italic font-light">Dress</span>
+            </h1>
+            <p className={`${styles.heroSubtitle} ${styles.reveal} ${styles.revealDelay1}`}>
+              Heritage woven into every thread. Discover garments that carry centuries of cultural artistry.
+            </p>
+            <div className={`${styles.reveal} ${styles.revealDelay2}`}>
+              <a href="#collection" className={styles.btnPrimary}>
+                <span>Explore Collection</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div className={styles.scrollIndicatorWrapper}>
+          <div className={styles.scrollIndicator}>
+            <svg width="24" height="40" viewBox="0 0 24 40" fill="none">
+              <rect x="1" y="1" width="22" height="38" stroke="currentColor" strokeWidth="1" />
+              <circle cx="12" cy="12" r="3" fill="currentColor" />
+            </svg>
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Collection Grid */}
+      <section id="collection" className={styles.collectionSection}>
+        <div className={styles.sectionContent}>
+          <div className={styles.sectionHeader}>
+            <div className={styles.reveal}>
+              <p className={styles.sectionLabel}>Curated Selection</p>
+              <h2 className={styles.sectionTitle}>Featured Pieces</h2>
+            </div>
+            <p className={`${styles.sectionDescription} ${styles.reveal} ${styles.revealDelay1}`}>
+              Each garment tells a story of tradition, crafted by master artisans preserving ancient techniques.
+            </p>
+          </div>
+
+          <div className={styles.collectionGrid}>
+            <div className={`${styles.imgContainer} ${styles.collectionItem} ${styles.reveal} ${styles.revealDelay1}`}>
+              <img
+                src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&q=80"
+                alt="Kimono silk traditional dress"
+              />
+            </div>
+            <div className={`${styles.imgContainer} ${styles.collectionItem} ${styles.reveal} ${styles.revealDelay2}`}>
+              <img
+                src="https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=600&q=80"
+                alt="Embroidered traditional garment"
+              />
+            </div>
+            <div className={`${styles.imgContainer} ${styles.collectionItem} ${styles.reveal} ${styles.revealDelay3}`}>
+              <img
+                src="https://images.unsplash.com/photo-1594938328870-9623159c8c99?w=600&q=80"
+                alt="Traditional ceremonial dress"
+              />
+            </div>
+            <div className={`${styles.imgContainer} ${styles.collectionItem} ${styles.reveal} ${styles.revealDelay4}`}>
+              <img
+                src="https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?w=600&q=80"
+                alt="Vintage textile artwork"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Heritage Section */}
+      <section id="heritage" className={styles.heritageSection}>
+        <div className={styles.sectionContent}>
+          <div className={styles.heritageGrid}>
+            <div className={styles.heritageContent}>
+              <div className={styles.reveal}>
+                <p className={styles.sectionLabel}>Our Heritage</p>
+                <h2 className={styles.sectionTitle}>
+                  Preserving the Art of Traditional Craftsmanship
+                </h2>
+              </div>
+              <div className={`${styles.heritageText} ${styles.reveal} ${styles.revealDelay1}`}>
+                <p>
+                  For generations, our artisans have dedicated their lives to mastering the intricate techniques passed down through centuries. Each stitch, each pattern, carries the weight of cultural memory.
+                </p>
+                <p>
+                  We work directly with communities across Asia, ensuring that traditional methods are preserved while providing sustainable livelihoods for the craftspeople who keep these traditions alive.
+                </p>
+              </div>
+              <div className={`${styles.heritageStats} ${styles.reveal} ${styles.revealDelay2}`}>
+                <div className={styles.statItem}>
+                  <p className={styles.statNumber}>127</p>
+                  <p className={styles.statLabel}>Master Artisans</p>
+                </div>
+                <div className={styles.statItem}>
+                  <p className={styles.statNumber}>45</p>
+                  <p className={styles.statLabel}>Years of Heritage</p>
+                </div>
+              </div>
+            </div>
+            <div className={styles.heritageImage}>
+              <div className={`${styles.imgContainer} ${styles.heritageImageWrapper} ${styles.reveal}`}>
+                <img
+                  src="https://images.unsplash.com/photo-1602028915047-37269d1a73f7?w=800&q=80"
+                  alt="Artisan hands working on traditional embroidery"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Categories Section */}
+      <section className={styles.categoriesSection}>
+        <div className={styles.sectionContent}>
+          <div className={styles.categoriesHeader}>
+            <p className={`${styles.sectionLabel} ${styles.reveal}`}>Browse by Style</p>
+            <h2 className={styles.sectionTitle}>Dress Categories</h2>
+          </div>
+
+          <div className={styles.categoriesGrid}>
+            <a href="#" className={`${styles.categoryCard} ${styles.reveal} ${styles.revealDelay1}`}>
+              <span className={`${styles.categoryNumber} ${styles.reveal} ${styles.revealDelay1}`}>01</span>
+              <h3 className={styles.categoryTitle}>Ceremonial</h3>
+              <p className={styles.categoryDescription}>
+                Traditional garments for weddings, festivals, and sacred ceremonies. Each piece honors centuries of cultural significance.
+              </p>
+            </a>
+            <a href="#" className={`${styles.categoryCard} ${styles.reveal} ${styles.revealDelay2}`}>
+              <span className={`${styles.categoryNumber} ${styles.reveal} ${styles.revealDelay2}`}>02</span>
+              <h3 className={styles.categoryTitle}>Everyday Elegance</h3>
+              <p className={styles.categoryDescription}>
+                Comfortable traditional wear adapted for modern life. Timeless designs that seamlessly blend heritage with practicality.
+              </p>
+            </a>
+            <a href="#" className={`${styles.categoryCard} ${styles.reveal} ${styles.revealDelay3}`}>
+              <span className={`${styles.categoryNumber} ${styles.reveal} ${styles.revealDelay3}`}>03</span>
+              <h3 className={styles.categoryTitle}>Contemporary</h3>
+              <p className={styles.categoryDescription}>
+                Modern interpretations of traditional silhouettes. Where ancient craftsmanship meets contemporary design sensibility.
+              </p>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Quote Section */}
+      <section className={styles.quoteSection}>
+        <div className={styles.quoteContent}>
+          <div className={styles.reveal}>
+            <svg className={styles.quoteIcon} viewBox="0 0 24 24" fill="none">
+              <path d="M10 11L8 17H5L7 11H4V7H10V11ZM20 11L18 17H15L17 11H14V7H20V11Z" fill="currentColor" />
+            </svg>
+            <blockquote className={styles.quoteText}>
+              In every thread lies the story of our ancestors, in every pattern the wisdom of generations.
+            </blockquote>
+            <cite className={styles.quoteAuthor}>
+              Master Artisan, Kyoto
+            </cite>
+          </div>
+        </div>
+      </section>
+
+      {/* Artisans Grid */}
+      <section id="artisans" className={styles.artisansSection}>
+        <div className={styles.sectionContent}>
+          <div className={styles.sectionHeader}>
+            <div className={styles.reveal}>
+              <p className={styles.sectionLabel}>Meet the Makers</p>
+              <h2 className={styles.sectionTitle}>Master Artisans</h2>
+            </div>
+          </div>
+
+          <div className={styles.artisansGrid}>
+            <div className={`${styles.artisanCard} ${styles.reveal} ${styles.revealDelay1}`}>
+              <div className={`${styles.imgContainer} ${styles.artisanImageWrapper}`}>
+                <img
+                  src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80"
+                  alt="Silk weaver at traditional loom"
+                />
+              </div>
+              <div className={styles.artisanInfo}>
+                <div>
+                  <h3 className={styles.artisanName}>Yamamoto Textile House</h3>
+                  <p className={styles.artisanLocation}>Kyoto, Japan</p>
+                </div>
+                <span className={styles.artisanSpecialty}>Silk Weaving</span>
+              </div>
+            </div>
+            <div className={`${styles.artisanCard} ${styles.reveal} ${styles.revealDelay2}`}>
+              <div className={`${styles.imgContainer} ${styles.artisanImageWrapper}`}>
+                <img
+                  src="https://images.unsplash.com/photo-1605518216938-7c31b7b14ad0?w=800&q=80"
+                  alt="Embroidery artisan at work"
+                />
+              </div>
+              <div className={styles.artisanInfo}>
+                <div>
+                  <h3 className={styles.artisanName}>Chen Embroidery Studio</h3>
+                  <p className={styles.artisanLocation}>Suzhou, China</p>
+                </div>
+                <span className={styles.artisanSpecialty}>Embroidery</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Newsletter Section */}
+      <section id="contact" className={styles.newsletterSection}>
+        <div className={styles.sectionContent}>
+          <div className={styles.newsletterContent}>
+            <div className={styles.reveal}>
+              <p className={styles.sectionLabel}>Stay Connected</p>
+              <h2 className={styles.newsletterTitle}>Join Our Journey</h2>
+              <p className={styles.newsletterDescription}>
+                Receive stories about our artisans, early access to new collections, and invitations to exclusive events.
+              </p>
+            </div>
+            <form className={`${styles.newsletterForm} ${styles.reveal} ${styles.revealDelay1}`}>
+              <input
+                type="email"
+                placeholder="Your email address"
+                className={styles.newsletterInput}
+                required
+                aria-label="Email address"
+              />
+              <button type="submit" className={styles.btnPrimary}>
+                <span>Subscribe</span>
+              </button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className={styles.footer}>
+        <div className={styles.footerContent}>
+          <div className={styles.footerGrid}>
+            <div className={styles.footerBrand}>
+              <a href="#" className={styles.footerLogo}>
+                <span>T</span>RADITIONAL
+              </a>
+              <p className={styles.footerDescription}>
+                Preserving heritage through authentic traditional dress. Each garment connects you to centuries of artistry and cultural wisdom.
+              </p>
+            </div>
+            <div className={styles.footerColumn}>
+              <p className={styles.footerColumnTitle}>Navigate</p>
+              <nav className={styles.footerLinks}>
+                <a href="#collection" className={styles.footerLink}>Collection</a>
+                <a href="#heritage" className={styles.footerLink}>Heritage</a>
+                <a href="#artisans" className={styles.footerLink}>Artisans</a>
+                <a href="#contact" className={styles.footerLink}>Contact</a>
+              </nav>
+            </div>
+            <div className={styles.footerColumn}>
+              <p className={styles.footerColumnTitle}>Connect</p>
+              <nav className={styles.footerLinks}>
+                <a href="#" className={styles.footerLink}>Instagram</a>
+                <a href="#" className={styles.footerLink}>Pinterest</a>
+                <a href="#" className={styles.footerLink}>WeChat</a>
+              </nav>
+            </div>
+          </div>
+          <div className={styles.footerBottom}>
+            <p className={styles.footerCopyright}>2024 Traditional Dress. All rights reserved.</p>
+            <div className={styles.footerLegal}>
+              <a href="#" className={styles.footerLegalLink}>Privacy</a>
+              <a href="#" className={styles.footerLegalLink}>Terms</a>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
+</file>
+
+<file path="src/components/ui/button.tsx">
+import * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority"
+import { Slot } from "radix-ui"
+
+import { cn } from "@/lib/utils"
+
+const buttonVariants = cva(
+  "group/button inline-flex shrink-0 items-center justify-center rounded-none border border-transparent bg-clip-padding text-xs font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-1 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground [a]:hover:bg-primary/80",
+        outline:
+          "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
+        secondary:
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
+        ghost:
+          "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
+        destructive:
+          "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
+        link: "text-primary underline-offset-4 hover:underline",
+      },
+      size: {
+        default:
+          "h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
+        xs: "h-6 gap-1 rounded-none px-2 text-xs has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
+        sm: "h-7 gap-1 rounded-none px-2.5 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
+        lg: "h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3",
+        icon: "size-8",
+        "icon-xs": "size-6 rounded-none [&_svg:not([class*='size-'])]:size-3",
+        "icon-sm": "size-7 rounded-none",
+        "icon-lg": "size-9",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+)
+
+function Button({
+  className,
+  variant = "default",
+  size = "default",
+  asChild = false,
+  ...props
+}: React.ComponentProps<"button"> &
+  VariantProps<typeof buttonVariants> & {
+    asChild?: boolean
+  }) {
+  const Comp = asChild ? Slot.Root : "button"
+
+  return (
+    <Comp
+      data-slot="button"
+      data-variant={variant}
+      data-size={size}
+      className={cn(buttonVariants({ variant, size, className }))}
+      {...props}
+    />
+  )
+}
+
+export { Button, buttonVariants }
+</file>
+
+<file path="src/lib/auth-client.ts">
+import { createAuthClient } from "better-auth/react";
+
+export const authClient = createAuthClient({
+  baseURL: "http://localhost:3000",
+});
+</file>
+
+<file path="src/lib/auth-schema.ts">
+import { relations } from "drizzle-orm";
+import { pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
+
+export const user = pgTable("user", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  emailVerified: boolean("email_verified").default(false).notNull(),
+  image: text("image"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .notNull(),
+});
+
+export const session = pgTable(
+  "session",
+  {
+    id: text("id").primaryKey(),
+    expiresAt: timestamp("expires_at").notNull(),
+    token: text("token").notNull().unique(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+  },
+  (table) => [index("session_userId_idx").on(table.userId)],
+);
+
+export const account = pgTable(
+  "account",
+  {
+    id: text("id").primaryKey(),
+    accountId: text("account_id").notNull(),
+    providerId: text("provider_id").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    accessToken: text("access_token"),
+    refreshToken: text("refresh_token"),
+    idToken: text("id_token"),
+    accessTokenExpiresAt: timestamp("access_token_expires_at"),
+    refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
+    scope: text("scope"),
+    password: text("password"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [index("account_userId_idx").on(table.userId)],
+);
+
+export const verification = pgTable(
+  "verification",
+  {
+    id: text("id").primaryKey(),
+    identifier: text("identifier").notNull(),
+    value: text("value").notNull(),
+    expiresAt: timestamp("expires_at").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [index("verification_identifier_idx").on(table.identifier)],
+);
+
+export const userRelations = relations(user, ({ many }) => ({
+  sessions: many(session),
+  accounts: many(account),
+}));
+
+export const sessionRelations = relations(session, ({ one }) => ({
+  user: one(user, {
+    fields: [session.userId],
+    references: [user.id],
+  }),
+}));
+
+export const accountRelations = relations(account, ({ one }) => ({
+  user: one(user, {
+    fields: [account.userId],
+    references: [user.id],
+  }),
+}));
+</file>
+
+<file path="src/lib/auth.ts">
+import { betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
+import * as schema from "./auth-schema";
+
+const db = drizzle(new Pool({ connectionString: process.env.DATABASE_URL }), {
+  schema,
+});
+
+export const auth = betterAuth({
+  database: drizzleAdapter(db, { provider: "pg", schema }),
+  baseURL: "http://localhost:3000/",
+  emailAndPassword: { enabled: true },
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    },
+  },
+});
+</file>
+
+<file path="src/lib/utils.ts">
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+</file>
+
+<file path="src/index.tsx">
+import 'dotenv/config';
+import { drizzle } from 'drizzle-orm/node-postgres';
+
+const db = drizzle(process.env.DATABASE_URL!);
+
+export default db;
+</file>
+
+<file path="src/app/(admin)/admin/blank/page.tsx">
+import { Admin } from "@/components/Admin/Admin";
+import { AdminSidebar } from "@/components/Admin/AdminSidebar";
+
+export default function BlankPage() {
+  return (
+    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
+      WOi
+    </div>
+  );
+}
+</file>
+
+<file path="src/app/(admin)/admin/dashboard/page.tsx">
+import { AdminSidebar } from "@/components/Admin/AdminSidebar";
+
+export default function AdminPage() {
+  return (
+    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
+      <main className="flex-1 p-8">
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
+          Hello World
+        </h1>
+        <p className="text-gray-600 dark:text-gray-400 mt-4">
+          Welcome to the admin page!
+        </p>
+      </main>
+    </div>
+  );
+}
+</file>
+
+<file path="src/app/(admin)/admin/layout.tsx">
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { AdminSidebar } from "@/components/Admin/AdminSidebar";
+
+export default async function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session) {
+    redirect("/sign-in");
+  }
+
+  return (
+    <div className="flex min-h-screen">
+      <AdminSidebar />
+      <main className="flex-1 ml-[260px]">
+        {children}
+      </main>
+    </div>
+  );
+}
+</file>
+
+<file path="src/app/layout.tsx">
+import type { Metadata } from "next";
+import { Geist, Geist_Mono, JetBrains_Mono } from "next/font/google";
+import "./globals.css";
+import { cn } from "@/lib/utils";
+
+const jetbrainsMono = JetBrains_Mono({subsets:['latin'],variable:'--font-mono'});
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+export const metadata: Metadata = {
+  title: "Create Next App",
+  description: "Generated by create next app",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en" className={cn("font-mono", jetbrainsMono.variable)}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        {children}
+      </body>
+    </html>
+  );
+}
+</file>
+
+<file path="src/app/page.tsx">
+import { Landing } from "@/components/Landing/Landing";
+
+export default function Home() {
+  return (
+    <Landing />
+  );
+}
+</file>
+
+<file path="src/components/Admin/AdminSidebar.tsx">
+"use client";
+
+import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
+import { authClient } from "@/lib/auth-client";
+import styles from "./AdminSidebar.module.css";
+
+const navItems = [
+  { name: "Dashboard", href: "/admin/dashboard", icon: DashboardIcon },
+  { name: "Products", href: "/admin/products", icon: ProductsIcon },
+  { name: "Orders", href: "/admin/orders", icon: OrdersIcon, badge: 12 },
+  { name: "Artisans", href: "/admin/artisans", icon: ArtisansIcon },
+];
+
+function DashboardIcon() {
+  return (
+    <svg className={styles.navItemIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+    </svg>
+  );
+}
+
+function ProductsIcon() {
+  return (
+    <svg className={styles.navItemIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+    </svg>
+  );
+}
+
+function OrdersIcon() {
+  return (
+    <svg className={styles.navItemIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+    </svg>
+  );
+}
+
+function ArtisansIcon() {
+  return (
+    <svg className={styles.navItemIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+    </svg>
+  );
+}
+
+export function AdminSidebar() {
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          router.push("/sign-in");
+        },
+      },
+    });
+  };
+
+  return (
+    <aside className={styles.sidebar}>
+      {/* Logo */}
+      <div className={styles.logoSection}>
+        <span className={styles.logoWrapper}>
+          <span className={styles.logoTextStrong}>T</span>
+          <span className={styles.logoTextLight}>RADITIONAL</span>
+        </span>
+      </div>
+
+      {/* Navigation */}
+      <nav className={styles.navSection}>
+        <div className={styles.navSectionCategory}>
+          <p className={styles.navSectionCategoryText}>Main</p>
+        </div>
+
+        {navItems.map((item) => (
+          <Link
+            key={item.name}
+            href={item.href}
+            className={`${styles.navItem} ${pathname === item.href ? styles.navItemActive : ""}`}
+          >
+            <item.icon />
+            <span className={styles.navText}>{item.name}</span>
+            {item.badge && (
+              <span className={styles.navItemBadge}>{item.badge}</span>
+            )}
+          </Link>
+        ))}
+
+        <div className={styles.navSectionCategory}>
+          <p className={styles.navSectionCategoryText}>Analytics</p>
+        </div>
+
+        <Link href="/admin/reports" className={styles.navItem}>
+          <svg className={styles.navItemIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+          </svg>
+          <span className={styles.navText}>Reports</span>
+        </Link>
+
+        <Link href="/admin/performance" className={styles.navItem}>
+          <svg className={styles.navItemIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
+          </svg>
+          <span className={styles.navText}>Performance</span>
+        </Link>
+
+        <div className={styles.navSectionCategory}>
+          <p className={styles.navSectionCategoryText}>Settings</p>
+        </div>
+
+        <Link href="/admin/settings" className={styles.navItem}>
+          <svg className={styles.navItemIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          <span className={styles.navText}>Settings</span>
+        </Link>
+      </nav>
+
+      {/* User Section */}
+      <div className={styles.userSection}>
+        <div className={styles.userSectionContent}>
+          <div className={styles.userAvatar}>YK</div>
+          <div className={styles.userInfo}>
+            <p className={styles.userName}>Yamamoto Kimiko</p>
+            <p className={styles.userRole}>Administrator</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+}
+</file>
+
+<file path="src/db/schema.ts">
+export * from "@/lib/auth-schema";
+export * from "./Product";
+</file>
+
+<file path="src/middleware.ts">
+import { NextRequest, NextResponse } from "next/server";
+import { getSessionCookie } from "better-auth/cookies";
+
+export async function middleware(request: NextRequest) {
+  const sessionCookie = getSessionCookie(request);
+
+  if (!sessionCookie) {
+    return NextResponse.redirect(new URL("/sign-in", request.url));
+  }
+
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: ["/admin/:path*"],
+};
+</file>
+
+<file path="src/app/globals.css">
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-mono);
+  --font-heading: var(--font-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+  --admin-sidebar-bg: #FAFAF8;
+  --admin-sidebar-bg-secondary: #F5F4F0;
+  --admin-sidebar-fg: #1A1A18;
+  --admin-sidebar-fg-muted: #7A7A74;
+  --admin-sidebar-accent: #C9A227;
+  --admin-sidebar-accent-soft: #F5EFC6;
+  --admin-sidebar-border: #E5E4E0;
+  --admin-sidebar-card: #FFFFFF;
+  --admin-sidebar-success: #4A7C59;
+  --admin-sidebar-warning: #B8860B;
+  --admin-sidebar-danger: #9B4444;
+  --admin-sidebar-font-display: 'Cormorant Garamond', serif;
+  --admin-sidebar-font-sans: 'Outfit', sans-serif;
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-mono;
+  }
+}
+</file>
+
+<file path="package.json">
+{
+  "name": "next_swarna_4",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build --turbopack",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@phosphor-icons/react": "^2.1.10",
+    "better-auth": "^1.5.6",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "dotenv": "^17.3.1",
+    "drizzle-orm": "^0.45.1",
+    "next": "15.5.14",
+    "pg": "^8.20.0",
+    "radix-ui": "^1.4.3",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "shadcn": "^4.1.0",
+    "tailwind-merge": "^3.5.0",
+    "tw-animate-css": "^1.4.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/pg": "^8.20.0",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "drizzle-kit": "^0.31.10",
+    "eslint": "^9",
+    "eslint-config-next": "15.5.14",
+    "tailwindcss": "^4",
+    "tsx": "^4.21.0",
+    "typescript": "^5"
+  }
+}
+</file>
+
+</files>
