@@ -14,12 +14,20 @@ export default async function ProductsPage() {
     <div className="flex min-h-screen flex-col bg-gray-50 p-8 dark:bg-gray-900">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Products Data</h1>
-        <Link 
-          href="/admin/products/create"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition font-medium"
-        >
-          + Create Product
-        </Link>
+        <div className="flex gap-3">
+          <Link 
+            href="/admin/products/categories"
+            className="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-800 transition font-medium"
+          >
+            Manage Categories
+          </Link>
+          <Link 
+            href="/admin/products/create"
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition font-medium"
+          >
+            + Create Product
+          </Link>
+        </div>
       </div>
 
       {allProducts.length === 0 ? (
