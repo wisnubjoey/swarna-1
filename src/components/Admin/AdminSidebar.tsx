@@ -8,7 +8,7 @@ import styles from "./AdminSidebar.module.css";
 const navItems = [
   { name: "Dashboard", href: "/admin/dashboard", icon: DashboardIcon },
   { name: "Products", href: "/admin/products", icon: ProductsIcon },
-  { name: "Orders", href: "/admin/orders", icon: OrdersIcon, badge: 12 },
+  { name: "Orders", href: "/admin/blank", icon: OrdersIcon, badge: 12 },
   { name: "Artisans", href: "/admin/artisans", icon: ArtisansIcon },
 ];
 
