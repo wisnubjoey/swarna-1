@@ -13,6 +13,7 @@ type ProductUIProps = {
     color: string | null;
     stockQuantity: number;
     size: string | null;
+    mainImageUrl: string | null; // ADDED: matching your Drizzle schema
     category: {
       name: string;
     };
@@ -54,10 +55,10 @@ const ProductUI: React.FC<ProductUIProps> = ({ product }) => {
   return (
     <div className="w-full max-w-[360px] overflow-hidden transition-all duration-300 group bg-white border border-[rgba(58,42,26,0.08)] shadow-[0_1px_3px_rgba(58,42,26,0.04),0_8px_32px_rgba(58,42,26,0.06)]">
 
-      {/* Image Section (Keeping your hardcoded placeholder) */}
+      {/* Image Section */}
       <div className="relative aspect-[4/3] overflow-hidden bg-[#f5f0e8]">
         <img
-          src="https://picsum.photos/seed/lux-watch-77/720/540.jpg"
+          src={product.mainImageUrl || "/placeholder-image.png"} // CHANGED: maps to DB field, falls back to public folder
           alt={product.name}
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
         />
