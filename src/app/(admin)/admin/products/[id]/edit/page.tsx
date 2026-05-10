@@ -1,18 +1,131 @@
-import db from "@/index";
-import { categories, products } from "@/db/Product";
-import { updateProduct, deleteProduct } from "../../actions";
-import { eq } from "drizzle-orm";
+"use client";
+
+import { updateProduct, deleteProduct, getProductById, getCategories } from "../../actions";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { useUploadThing } from "@/lib/uploadthing";
+import { useState, useRef, useEffect, use } from "react";
 
-export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+interface Category {
+  id: string;
+  name: string;
+}
 
-  const [product] = await db.select().from(products).where(eq(products.id, id));
-  const allCategories = await db.select().from(categories);
+interface Product {
+  id: string;
+  sku: string;
+  name: string;
+  description: string | null;
+  categoryId: string;
+  price: string;
+  stockQuantity: number;
+  material: string | null;
+  color: string | null;
+  size: string | null;
+  gender: "female" | "male" | "unisex";
+  status: "active" | "draft" | "archived";
+  mainImageUrl: string | null;
+}
+
+export default function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
+  // Unwrap the params promise (Next.js 15 App Router standard)
+  const { id } = use(params);
+
+  const [product, setProduct] = useState<Product | null>(null);
+  const [allCategories, setAllCategories] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Image states (initialized to empty, populated in useEffect)
+  const [file, setFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [mainImageUrl, setMainImageUrl] = useState<string>("");
+  const [uploadStatus, setUploadStatus] = useState<"idle" | "uploading" | "complete" | "error">("idle");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch product and categories on mount
+  useEffect(() => {
+    Promise.all([getProductById(id), getCategories()])
+      .then(([productData, categoriesData]) => {
+        if (productData) {
+          setProduct(productData);
+          // Pre-populate the image states with existing DB data
+          setMainImageUrl(productData.mainImageUrl || "");
+          setPreviewUrl(productData.mainImageUrl || null);
+        }
+        setAllCategories(categoriesData);
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch data:", err);
+        setIsLoading(false);
+      });
+  }, [id]);
+
+  const { startUpload, isUploading } = useUploadThing("imageUploader", {
+    onClientUploadComplete: (res) => {
+      if (res && res[0]?.url) {
+        setMainImageUrl(res[0].url);
+      }
+      setUploadStatus("complete");
+    },
+    onUploadError: (error) => {
+      console.error("Upload error:", error);
+      setUploadStatus("error");
+    },
+  });
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+      setPreviewUrl(URL.createObjectURL(selectedFile));
+      setUploadStatus("idle");
+      setMainImageUrl(""); // Clear old URL so the user must upload the new file
+    }
+  };
+
+  const handleUpload = async () => {
+    if (file) {
+      await startUpload([file]);
+    }
+  };
+
+  const handleRemove = () => {
+    setFile(null);
+    setPreviewUrl(null);
+    setUploadStatus("idle");
+    setMainImageUrl(""); 
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  // Cleanup object URLs to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (previewUrl && previewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
+  if (isLoading) {
+    return (
+      <div className="p-8 max-w-2xl mx-auto">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <p className="text-gray-500">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!product) {
-    notFound();
+    return (
+      <div className="p-8 max-w-2xl mx-auto">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <p className="text-gray-500">Product not found.</p>
+        </div>
+      </div>
+    );
   }
 
   // Bind the ID to the actions
@@ -31,8 +144,77 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
         </Link>
       </div>
 
+      {/* Main Image Upload Section */}
+      <div className="mb-6 bg-white p-6 rounded-lg border dark:bg-gray-800 dark:border-gray-700">
+        <h2 className="text-lg font-semibold mb-4">Main Image</h2>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-2">Select Image</label>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="block w-full text-sm text-gray-500 dark:text-gray-400
+              file:mr-4 file:py-2 file:px-4
+              file:rounded-md file:border-0
+              file:text-sm file:font-semibold
+              file:bg-blue-50 file:text-blue-700
+              hover:file:bg-blue-100
+              dark:file:bg-gray-700 dark:file:text-gray-300
+              dark:hover:file:bg-gray-600"
+          />
+        </div>
+
+        {/* Preview (shows existing DB image or newly selected local file) */}
+        {previewUrl && (
+          <div className="mb-4">
+            <div className="relative inline-block">
+              <img
+                src={previewUrl}
+                alt="Preview"
+                className="max-w-xs max-h-48 object-contain rounded-lg border border-gray-200 dark:border-gray-700"
+              />
+              <button
+                type="button"
+                onClick={handleRemove}
+                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition-colors"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Upload Button (only shows if a new file is selected but not yet uploaded) */}
+        {file && !mainImageUrl && (
+          <button
+            type="button"
+            onClick={handleUpload}
+            disabled={isUploading}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
+          >
+            {isUploading ? "Uploading..." : "Upload Image"}
+          </button>
+        )}
+
+        {uploadStatus === "complete" && mainImageUrl && (
+          <p className="mt-2 text-sm text-green-600 dark:text-green-400">
+            ✓ Image uploaded successfully
+          </p>
+        )}
+        {uploadStatus === "error" && (
+          <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+            ✗ Upload failed
+          </p>
+        )}
+      </div>
+
       <div className="space-y-6">
         <form action={updateWithId} className="space-y-6 bg-white p-6 rounded-lg border dark:bg-gray-800 dark:border-gray-700">
+          {/* Hidden field for image URL - passes final URL to Server Action */}
+          <input type="hidden" name="mainImageUrl" value={mainImageUrl} />
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">Name *</label>

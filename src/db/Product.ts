@@ -48,9 +48,30 @@ export const categoryRelations = relations(categories, ({ many }) => ({
   products: many(products),
 }));
 
-export const productRelations = relations(products, ({ one }) => ({
+export const productImages = pgTable("product_images", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  productId: text("product_id")
+    .notNull()
+    .references(() => products.id, { onDelete: "cascade" }), // CASCADE is important here!
+  url: text("url").notNull(),
+  altText: varchar("alt_text", { length: 255 }),
+  sortOrder: integer("sort_order").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const productRelations = relations(products, ({ one, many }) => ({
   category: one(categories, {
     fields: [products.categoryId],
     references: [categories.id],
+  }),
+  // Add this line:
+  secondaryImages: many(productImages), 
+}));
+
+// Add the reverse relation for the image table
+export const productImageRelations = relations(productImages, ({ one }) => ({
+  product: one(products, {
+    fields: [productImages.productId],
+    references: [products.id],
   }),
 }));

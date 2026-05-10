@@ -1,10 +1,20 @@
 "use server";
 
 import db from "@/index";
-import { products } from "@/db/Product";
+import { products, categories } from "@/db/Product";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
+
+export async function getCategories() {
+  return await db.select().from(categories);
+}
+
+// ADDED: Fetch a single product by ID for the edit form
+export async function getProductById(id: string) {
+  const [product] = await db.select().from(products).where(eq(products.id, id));
+  return product;
+}
 
 export async function createProduct(formData: FormData) {
   const name = formData.get("name") as string;
@@ -18,6 +28,7 @@ export async function createProduct(formData: FormData) {
   const size = formData.get("size") as string;
   const gender = formData.get("gender") as "female" | "male" | "unisex";
   const status = (formData.get("status") as "active" | "draft" | "archived") || "draft";
+  const mainImageUrl = formData.get("mainImageUrl") as string || null;
 
   if (!name || !sku || !categoryId || !price || !gender) {
     throw new Error("Missing required fields");
@@ -35,6 +46,7 @@ export async function createProduct(formData: FormData) {
     size,
     gender,
     status,
+    mainImageUrl,
   });
 
   revalidatePath("/admin/products");
@@ -53,6 +65,9 @@ export async function updateProduct(id: string, formData: FormData) {
   const size = formData.get("size") as string;
   const gender = formData.get("gender") as "female" | "male" | "unisex";
   const status = (formData.get("status") as "active" | "draft" | "archived") || "draft";
+  
+  // ADDED: Grab the image URL from the hidden input
+  const mainImageUrl = formData.get("mainImageUrl") as string || null;
 
   if (!id || !name || !sku || !categoryId || !price || !gender) {
     throw new Error("Missing required fields");
@@ -70,6 +85,7 @@ export async function updateProduct(id: string, formData: FormData) {
     size,
     gender,
     status,
+    mainImageUrl, // ADDED: Save the image URL to the database
   }).where(eq(products.id, id));
 
   revalidatePath("/admin/products");
