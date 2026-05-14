@@ -19,6 +19,13 @@ export default function CreateProductPage() {
   const [uploadStatus, setUploadStatus] = useState<"idle" | "uploading" | "complete" | "error">("idle");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Secondary Images State
+  const [secondaryFiles, setSecondaryFiles] = useState<File[]>([]);
+  const [secondaryPreviewUrls, setSecondaryPreviewUrls] = useState<string[]>([]);
+  const [secondaryImageUrls, setSecondaryImageUrls] = useState<string[]>([]);
+  const [secondaryUploadStatus, setSecondaryUploadStatus] = useState<"idle" | "uploading" | "complete" | "error">("idle");
+  const secondaryFileInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     getCategories()
       .then((data) => {
@@ -31,6 +38,7 @@ export default function CreateProductPage() {
       });
   }, []);
 
+  // Main Image Uploader
   const { startUpload, isUploading } = useUploadThing("imageUploader", {
     onClientUploadComplete: (res) => {
       if (res && res[0]?.url) {
@@ -44,6 +52,22 @@ export default function CreateProductPage() {
     },
   });
 
+  // Secondary Images Uploader
+  const { startUpload: startSecondaryUpload, isUploading: isSecondaryUploading } = useUploadThing("imageUploader", {
+    onClientUploadComplete: (res) => {
+      if (res) {
+        const urls = res.map(file => file.url);
+        setSecondaryImageUrls(prev => [...prev, ...urls]);
+      }
+      setSecondaryUploadStatus("complete");
+      setSecondaryFiles([]); // Clear files after successful upload
+    },
+    onUploadError: (error) => {
+      console.error("Secondary upload error:", error);
+      setSecondaryUploadStatus("error");
+    },
+  });
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
@@ -54,14 +78,31 @@ export default function CreateProductPage() {
     }
   };
 
+  const handleSecondaryFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files || []);
+    if (selectedFiles.length > 0) {
+      setSecondaryFiles(prev => [...prev, ...selectedFiles]);
+      const newPreviews = selectedFiles.map(f => URL.createObjectURL(f));
+      setSecondaryPreviewUrls(prev => [...prev, ...newPreviews]);
+      setSecondaryUploadStatus("idle");
+    }
+  };
+
   const handleUpload = async () => {
     if (file) {
       await startUpload([file]);
     }
   };
 
+  const handleSecondaryUpload = async () => {
+    if (secondaryFiles.length > 0) {
+      await startSecondaryUpload(secondaryFiles);
+    }
+  };
+
   const handleRemove = () => {
     setFile(null);
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(null);
     setUploadStatus("idle");
     setMainImageUrl("");
@@ -70,13 +111,29 @@ export default function CreateProductPage() {
     }
   };
 
+  const handleRemoveSecondaryPreview = (index: number) => {
+    setSecondaryFiles(prev => prev.filter((_, i) => i !== index));
+    setSecondaryPreviewUrls(prev => {
+      URL.revokeObjectURL(prev[index]);
+      return prev.filter((_, i) => i !== index);
+    });
+    if (secondaryFileInputRef.current) {
+      secondaryFileInputRef.current.value = "";
+    }
+  };
+
+  const handleRemoveSecondaryUrl = (index: number) => {
+    setSecondaryImageUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
   useEffect(() => {
     return () => {
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);
       }
+      secondaryPreviewUrls.forEach(url => URL.revokeObjectURL(url));
     };
-  }, [previewUrl]);
+  }, [previewUrl, secondaryPreviewUrls]);
 
   if (isLoading) {
     return (
@@ -164,6 +221,101 @@ export default function CreateProductPage() {
         )}
       </div>
 
+      {/* Secondary Images Upload Section */}
+      <div className="mb-6 bg-white p-6 rounded-lg border dark:bg-gray-800 dark:border-gray-700">
+        <h2 className="text-lg font-semibold mb-4">Secondary Images</h2>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-2">Select Images (Max 10)</label>
+          <input
+            ref={secondaryFileInputRef}
+            type="file"
+            multiple
+            accept="image/*"
+            onChange={handleSecondaryFileChange}
+            className="block w-full text-sm text-gray-500 dark:text-gray-400
+              file:mr-4 file:py-2 file:px-4
+              file:rounded-md file:border-0
+              file:text-sm file:font-semibold
+              file:bg-blue-50 file:text-blue-700
+              hover:file:bg-blue-100
+              dark:file:bg-gray-700 dark:file:text-gray-300
+              dark:hover:file:bg-gray-600"
+          />
+        </div>
+
+        {/* Previews of files waiting to be uploaded */}
+        {secondaryPreviewUrls.length > 0 && (
+          <div className="mb-4">
+            <p className="text-sm font-medium mb-2">Pending Upload:</p>
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-4">
+              {secondaryPreviewUrls.map((url, index) => (
+                <div key={index} className="relative inline-block aspect-square">
+                  <img
+                    src={url}
+                    alt={`Secondary Preview ${index}`}
+                    className="w-full h-full object-cover rounded-lg border border-gray-200 dark:border-gray-700"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveSecondaryPreview(index)}
+                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition-colors"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Upload Button for secondary images */}
+        {secondaryFiles.length > 0 && (
+          <button
+            type="button"
+            onClick={handleSecondaryUpload}
+            disabled={isSecondaryUploading}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm mb-4"
+          >
+            {isSecondaryUploading ? `Uploading ${secondaryFiles.length} files...` : `Upload ${secondaryFiles.length} Secondary Images`}
+          </button>
+        )}
+
+        {/* Display already uploaded images */}
+        {secondaryImageUrls.length > 0 && (
+          <div className="mb-4 pt-4 border-t dark:border-gray-700">
+            <p className="text-sm font-medium mb-2">Uploaded Images:</p>
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-4">
+              {secondaryImageUrls.map((url, index) => (
+                <div key={index} className="relative inline-block aspect-square">
+                  <img
+                    src={url}
+                    alt={`Uploaded Secondary ${index}`}
+                    className="w-full h-full object-cover rounded-lg border border-green-200 dark:border-green-900"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveSecondaryUrl(index)}
+                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition-colors"
+                  >
+                    ×
+                  </button>
+                  <div className="absolute bottom-1 right-1 bg-green-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
+                    ✓
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {secondaryUploadStatus === "error" && (
+          <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+            ✗ Secondary upload failed
+          </p>
+        )}
+      </div>
+
       <form
         action={createProduct}
         className="space-y-6 bg-white p-6 rounded-lg border dark:bg-gray-800 dark:border-gray-700"
@@ -172,6 +324,11 @@ export default function CreateProductPage() {
         {mainImageUrl && (
           <input type="hidden" name="mainImageUrl" value={mainImageUrl} />
         )}
+
+        {/* Hidden fields for secondary image URLs */}
+        {secondaryImageUrls.map((url, index) => (
+          <input key={index} type="hidden" name="secondaryImageUrls" value={url} />
+        ))}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>

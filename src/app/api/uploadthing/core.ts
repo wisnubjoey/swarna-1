@@ -7,7 +7,7 @@ const f = createUploadthing();
 // FileRouter for your app, can contain multiple FileRoutes
 export const ourFileRouter = {
   // Define your file routes here
-  imageUploader: f({ image: { maxFileSize: "4MB", maxFileCount: 1 } })
+  imageUploader: f({ image: { maxFileSize: "4MB", maxFileCount: 10 } })
     // Authentication middleware
     .middleware(async ({ req }) => {
       // Get session using better-auth

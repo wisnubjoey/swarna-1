@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Detail — AURUM Store</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: '#4A5D4F',
+            'brand-hover': '#3d4d41',
+            'brand-light': '#8e9f92',
+            bg: '#f5f1eb',
+            'bg-alt': '#efe9e0',
+            'bg-card': '#f9f7f4',
+            'bg-warm': '#e8e2d9',
+            text: '#2c2c2c',
+            'text-light': '#5c5c5c',
+          },
+          fontFamily: {
+            display: ['Cinzel', 'serif'],
+            body: ['Lato', 'sans-serif'],
+            serif: ['Cormorant Garamond', 'serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    ::selection { background: #4A5D4F; color: #fff; }
+    body { font-family: 'Lato', sans-serif; }
+
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.8s ease-out forwards; }
+    .fade-up-d1 { animation: fadeUp 0.8s ease-out 0.1s forwards; opacity: 0; }
+    .fade-up-d2 { animation: fadeUp 0.8s ease-out 0.2s forwards; opacity: 0; }
+    .fade-up-d3 { animation: fadeUp 0.8s ease-out 0.3s forwards; opacity: 0; }
+    .fade-up-d4 { animation: fadeUp 0.8s ease-out 0.4s forwards; opacity: 0; }
+
+    .thumb-active { ring: 2px; border-color: #4A5D4F !important; }
+
+    .tab-active {
+      color: #4A5D4F;
+      border-bottom-color: #4A5D4F;
+    }
+
+    .zoom-lens {
+      position: absolute;
+      width: 180px; height: 180px;
+      border: 1px solid rgba(74,93,79,0.3);
+      border-radius: 50%;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+      background-repeat: no-repeat;
+      box-shadow: 0 0 30px rgba(74,93,79,0.15);
+    }
+
+    .main-image-wrap:hover .zoom-lens { opacity: 1; }
+
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none; margin: 0;
+    }
+    input[type="number"] { -moz-appearance: textfield; }
+  </style>
+</head>
+<body class="bg-bg text-text">
+
+  <!-- Breadcrumb -->
+  <div class="pt-24 pb-4 px-6 max-w-7xl mx-auto fade-up">
+    <nav class="flex items-center gap-2 text-xs tracking-widest uppercase text-text-light font-light">
+      <a href="#" class="hover:text-brand transition-colors">Home</a>
+      <i data-lucide="chevron-right" class="w-3 h-3"></i>
+      <a href="#" class="hover:text-brand transition-colors">Living</a>
+      <i data-lucide="chevron-right" class="w-3 h-3"></i>
+      <span class="text-text">Ceramic Vase Collection</span>
+    </nav>
+  </div>
+
+  <!-- Main Product Section -->
+  <section class="px-6 pb-24 max-w-7xl mx-auto">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
+
+      <!-- LEFT: Image Gallery -->
+      <div class="fade-up-d1">
+        <!-- Main Image -->
+        <div class="main-image-wrap relative overflow-hidden rounded-sm bg-bg-card aspect-[4/5] mb-4 cursor-crosshair" id="mainImageWrap">
+          <img id="mainImage" src="https://picsum.photos/seed/aurum-vase-main/800/1000.jpg" alt="Handcrafted Ceramic Vase" class="w-full h-full object-cover transition-transform duration-700">
+          <div class="zoom-lens" id="zoomLens"></div>
+          <!-- Badge -->
+          <div class="absolute top-5 left-5 bg-brand text-white text-[10px] font-medium tracking-[0.2em] uppercase px-3 py-1.5">New Arrival</div>
+          <!-- Wishlist -->
+          <button id="wishlistBtn" class="absolute top-5 right-5 w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center text-text-light hover:text-brand hover:bg-white transition-all duration-300 shadow-sm">
+            <i data-lucide="heart" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <!-- Thumbnail Grid -->
+        <div class="grid grid-cols-5 gap-3" id="thumbnailGrid">
+          <button class="thumbnail-btn aspect-square rounded-sm overflow-hidden border-2 border-brand transition-all duration-300 opacity-100" data-index="0" data-src="https://picsum.photos/seed/aurum-vase-main/800/1000.jpg" data-zoom="https://picsum.photos/seed/aurum-vase-main/1600/2000.jpg">
+            <img src="https://picsum.photos/seed/aurum-vase-main/200/200.jpg" alt="View 1" class="w-full h-full object-cover">
+          </button>
+          <button class="thumbnail-btn aspect-square rounded-sm overflow-hidden border-2 border-transparent hover:border-brand/30 transition-all duration-300 opacity-70 hover:opacity-100" data-index="1" data-src="https://picsum.photos/seed/aurum-vase-side/800/1000.jpg" data-zoom="https://picsum.photos/seed/aurum-vase-side/1600/2000.jpg">
+            <img src="https://picsum.photos/seed/aurum-vase-side/200/200.jpg" alt="View 2" class="w-full h-full object-cover">
+          </button>
+          <button class="thumbnail-btn aspect-square rounded-sm overflow-hidden border-2 border-transparent hover:border-brand/30 transition-all duration-300 opacity-70 hover:opacity-100" data-index="2" data-src="https://picsum.photos/seed/aurum-vase-detail/800/1000.jpg" data-zoom="https://picsum.photos/seed/aurum-vase-detail/1600/2000.jpg">
+            <img src="https://picsum.photos/seed/aurum-vase-detail/200/200.jpg" alt="View 3" class="w-full h-full object-cover">
+          </button>
+          <button class="thumbnail-btn aspect-square rounded-sm overflow-hidden border-2 border-transparent hover:border-brand/30 transition-all duration-300 opacity-70 hover:opacity-100" data-index="3" data-src="https://picsum.photos/seed/aurum-vase-lifestyle/800/1000.jpg" data-zoom="https://picsum.photos/seed/aurum-vase-lifestyle/1600/2000.jpg">
+            <img src="https://picsum.photos/seed/aurum-vase-lifestyle/200/200.jpg" alt="View 4" class="w-full h-full object-cover">
+          </button>
+          <button class="thumbnail-btn aspect-square rounded-sm overflow-hidden border-2 border-transparent hover:border-brand/30 transition-all duration-300 opacity-70 hover:opacity-100" data-index="4" data-src="https://picsum.photos/seed/aurum-vase-group/800/1000.jpg" data-zoom="https://picsum.photos/seed/aurum-vase-group/1600/2000.jpg">
+            <img src="https://picsum.photos/seed/aurum-vase-group/200/200.jpg" alt="View 5" class="w-full h-full object-cover">
+          </button>
+        </div>
+      </div>
+
+      <!-- RIGHT: Product Info -->
+      <div class="lg:py-4">
+        <!-- Tags -->
+        <div class="flex items-center gap-3 mb-4 fade-up-d1">
+          <span class="text-[10px] tracking-[0.25em] uppercase font-medium text-brand border border-brand/30 px-2.5 py-1 rounded-sm">Handcrafted</span>
+          <span class="text-[10px] tracking-[0.25em] uppercase font-medium text-text-light border border-bg-warm px-2.5 py-1 rounded-sm">Limited Edition</span>
+        </div>
+
+        <!-- Title -->
+        <h1 class="font-serif text-3xl md:text-4xl lg:text-5xl font-light leading-tight mb-3 fade-up-d1" style="font-family: 'Cormorant Garamond', serif;">
+          Artisan Ceramic Vase
+        </h1>
+
+        <!-- Subtitle -->
+        <p class="text-text-light text-sm font-light leading-relaxed mb-5 fade-up-d2">
+          From the <span class="italic" style="font-family: 'Cormorant Garamond', serif;">Earth & Form</span> Collection — Hand-thrown stoneware with a reactive glaze finish
+        </p>
+
+        <!-- Rating -->
+        <div class="flex items-center gap-3 mb-6 fade-up-d2">
+          <div class="flex items-center gap-0.5">
+            <i data-lucide="star" class="w-4 h-4 fill-brand text-brand"></i>
+            <i data-lucide="star" class="w-4 h-4 fill-brand text-brand"></i>
+            <i data-lucide="star" class="w-4 h-4 fill-brand text-brand"></i>
+            <i data-lucide="star" class="w-4 h-4 fill-brand text-brand"></i>
+            <i data-lucide="star" class="w-4 h-4 text-bg-warm fill-bg-warm"></i>
+          </div>
+          <span class="text-sm text-text-light font-light">4.0</span>
+          <span class="text-bg-warm">·</span>
+          <a href="#reviews" class="text-sm text-text-light font-light hover:text-brand transition-colors underline underline-offset-2">24 Reviews</a>
+        </div>
+
+        <!-- Price -->
+        <div class="flex items-baseline gap-4 mb-8 fade-up-d2">
+          <span class="font-serif text-3xl font-light" style="font-family: 'Cormorant Garamond', serif;">$185.00</span>
+          <span class="text-text-light line-through text-sm font-light">$220.00</span>
+          <span class="text-brand text-xs tracking-[0.15em] uppercase font-medium">Save 16%</span>
+        </div>
+
+        <!-- Divider -->
+        <div class="border-t border-bg-warm mb-8"></div>
+
+        <!-- Color Selection -->
+        <div class="mb-7 fade-up-d3">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs tracking-[0.2em] uppercase font-medium text-text">Color</span>
+            <span class="text-xs text-text-light font-light" id="colorLabel">Sage</span>
+          </div>
+          <div class="flex items-center gap-3" id="colorPicker">
+            <button class="color-swatch w-9 h-9 rounded-full border-2 border-brand p-0.5 transition-all duration-300" data-color="Sage" style="background: #8e9f92;" title="Sage">
+              <span class="block w-full h-full rounded-full" style="background: #8e9f92;"></span>
+            </button>
+            <button class="color-swatch w-9 h-9 rounded-full border-2 border-transparent p-0.5 hover:border-brand/30 transition-all duration-300" data-color="Sand" style="background: #d4c5b0;" title="Sand">
+              <span class="block w-full h-full rounded-full" style="background: #d4c5b0;"></span>
+            </button>
+            <button class="color-swatch w-9 h-9 rounded-full border-2 border-transparent p-0.5 hover:border-brand/30 transition-all duration-300" data-color="Charcoal" style="background: #3c3c3c;" title="Charcoal">
+              <span class="block w-full h-full rounded-full" style="background: #3c3c3c;"></span>
+            </button>
+            <button class="color-swatch w-9 h-9 rounded-full border-2 border-transparent p-0.5 hover:border-brand/30 transition-all duration-300" data-color="Ivory" style="background: #f0ece4;" title="Ivory">
+              <span class="block w-full h-full rounded-full border border-bg-warm" style="background: #f0ece4;"></span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Size Selection -->
+        <div class="mb-8 fade-up-d3">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs tracking-[0.2em] uppercase font-medium text-text">Size</span>
+            <button class="text-xs text-brand underline underline-offset-2 hover:text-brand-hover transition-colors" id="sizeGuideBtn">Size Guide</button>
+          </div>
+          <div class="flex items-center gap-3" id="sizePicker">
+            <button class="size-btn px-5 py-2.5 border border-brand bg-brand/5 text-brand text-sm tracking-wider transition-all duration-300 rounded-sm" data-size="S">S</button>
+            <button class="size-btn px-5 py-2.5 border border-bg-warm text-text-light text-sm tracking-wider hover:border-brand hover:text-brand transition-all duration-300 rounded-sm" data-size="M">M</button>
+            <button class="size-btn px-5 py-2.5 border border-bg-warm text-text-light text-sm tracking-wider hover:border-brand hover:text-brand transition-all duration-300 rounded-sm" data-size="L">L</button>
+            <button class="size-btn px-5 py-2.5 border border-bg-warm text-text-light text-sm tracking-wider hover:border-brand hover:text-brand transition-all duration-300 rounded-sm relative" data-size="XL">
+              XL
+              <span class="absolute -top-2 -right-2 bg-bg-warm text-text text-[8px] tracking-wider px-1.5 py-0.5 rounded-full font-medium">+ $20</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Quantity + Add to Cart -->
+        <div class="flex items-stretch gap-4 mb-5 fade-up-d4">
+          <!-- Quantity -->
+          <div class="flex items-center border border-bg-warm rounded-sm">
+            <button id="qtyMinus" class="w-11 h-12 flex items-center justify-center text-text-light hover:text-brand transition-colors">
+              <i data-lucide="minus" class="w-3.5 h-3.5"></i>
+            </button>
+            <input type="number" id="qtyInput" value="1" min="1" max="10" class="w-12 h-12 text-center text-sm font-light border-x border-bg-warm bg-transparent focus:outline-none">
+            <button id="qtyPlus" class="w-11 h-12 flex items-center justify-center text-text-light hover:text-brand transition-colors">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+
+          <!-- Add to Cart -->
+          <button id="addToCartBtn" class="flex-1 bg-brand hover:bg-brand-hover text-white text-sm tracking-[0.15em] uppercase font-medium transition-colors duration-300 rounded-sm flex items-center justify-center gap-3 px-6">
+            <i data-lucide="shopping-bag" class="w-4 h-4"></i>
+            Add to Cart
+          </button>
+        </div>
+
+        <!-- Buy Now -->
+        <button class="w-full border border-text text-text hover:bg-text hover:text-bg text-sm tracking-[0.15em] uppercase font-medium transition-all duration-300 rounded-sm py-3.5 mb-6 fade-up-d4">
+          Buy Now
+        </button>
+
+        <!-- Toast Notification -->
+        <div id="cartToast" class="fixed bottom-8 right-8 bg-brand text-white px-6 py-4 rounded-sm shadow-xl flex items-center gap-3 z-50 transition-all duration-500 translate-y-20 opacity-0 pointer-events-none">
+          <i data-lucide="check-circle" class="w-5 h-5"></i>
+          <span class="text-sm font-light">Added to cart successfully</span>
+        </div>
+
+        <!-- Perks -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 fade-up-d4">
+          <div class="flex items-center gap-3 text-text-light">
+            <i data-lucide="truck" class="w-4 h-4 text-brand flex-shrink-0"></i>
+            <span class="text-xs font-light leading-snug">Free Shipping<br>over $150</span>
+          </div>
+          <div class="flex items-center gap-3 text-text-light">
+            <i data-lucide="refresh-cw" class="w-4 h-4 text-brand flex-shrink-0"></i>
+            <span class="text-xs font-light leading-snug">30-Day<br>Returns</span>
+          </div>
+          <div class="flex items-center gap-3 text-text-light">
+            <i data-lucide="shield-check" class="w-4 h-4 text-brand flex-shrink-0"></i>
+            <span class="text-xs font-light leading-snug">2-Year<br>Warranty</span>
+          </div>
+        </div>
+
+        <!-- Accordion: Details -->
+        <div class="border-t border-bg-warm">
+          <button class="accordion-trigger w-full flex items-center justify-between py-5 text-left group" data-target="descPanel">
+            <span class="text-xs tracking-[0.2em] uppercase font-medium">Description</span>
+            <i data-lucide="plus" class="w-4 h-4 text-text-light group-hover:text-brand transition-all duration-300 accordion-icon"></i>
+          </button>
+          <div id="descPanel" class="accordion-panel overflow-hidden max-h-0 transition-all duration-500">
+            <div class="pb-6">
+              <p class="text-sm text-text-light font-light leading-relaxed mb-4">
+                Each piece in our Artisan Ceramic Collection is hand-thrown on a potter's wheel by skilled craftspeople in our Portuguese studio. The reactive glaze creates unique variations — no two pieces are exactly alike.
+              </p>
+              <p class="text-sm text-text-light font-light leading-relaxed mb-4">
+                Inspired by organic forms found in nature, the gentle undulations and earthy tones bring a sense of calm and authenticity to any interior space. Perfect as a standalone sculptural piece or arranged with dried botanicals.
+              </p>
+              <p class="text-sm text-text-light font-light leading-relaxed italic" style="font-family: 'Cormorant Garamond', serif;">
+                "Every imperfection tells the story of the maker's hand."
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Accordion: Specs -->
+        <div class="border-t border-bg-warm">
+          <button class="accordion-trigger w-full flex items-center justify-between py-5 text-left group" data-target="specsPanel">
+            <span class="text-xs tracking-[0.2em] uppercase font-medium">Specifications</span>
+            <i data-lucide="plus" class="w-4 h-4 text-text-light group-hover:text-brand transition-all duration-300 accordion-icon"></i>
+          </button>
+          <div id="specsPanel" class="accordion-panel overflow-hidden max-h-0 transition-all duration-500">
+            <div class="pb-6">
+              <table class="w-full text-sm">
+                <tbody>
+                  <tr class="border-b border-bg-warm/50">
+                    <td class="py-3 text-text-light font-light w-1/3">Material</td>
+                    <td class="py-3 font-light">Stoneware Clay</td>
+                  </tr>
+                  <tr class="border-b border-bg-warm/50">
+                    <td class="py-3 text-text-light font-light">Glaze</td>
+                    <td class="py-3 font-light">Reactive Matte Finish</td>
+                  </tr>
+                  <tr class="border-b border-bg-warm/50">
+                    <td class="py-3 text-text-light font-light">Dimensions (S)</td>
+                    <td class="py-3 font-light">H 18cm × Ø 12cm</td>
+                  </tr>
+                  <tr class="border-b border-bg-warm/50">
+                    <td class="py-3 text-text-light font-light">Dimensions (M)</td>
+                    <td class="py-3 font-light">H 24cm × Ø 16cm</td>
+                  </tr>
+                  <tr class="border-b border-bg-warm/50">
+                    <td class="py-3 text-text-light font-light">Dimensions (L)</td>
+                    <td class="py-3 font-light">H 32cm × Ø 20cm</td>
+                  </tr>
+                  <tr class="border-b border-bg-warm/50">
+                    <td class="py-3 text-text-light font-light">Dimensions (XL)</td>
+                    <td class="py-3 font-light">H 40cm × Ø 24cm</td>
+                  </tr>
+                  <tr class="border-b border-bg-warm/50">
+                    <td class="py-3 text-text-light font-light">Weight</td>
+                    <td class="py-3 font-light">1.2 — 3.8 kg (varies by size)</td>
+                  </tr>
+                  <tr>
+                    <td class="py-3 text-text-light font-light">Origin</td>
+                    <td class="py-3 font-light">Handmade in Portugal</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Accordion: Care -->
+        <div class="border-t border-bg-warm border-b">
+          <button class="accordion-trigger w-full flex items-center justify-between py-5 text-left group" data-target="carePanel">
+            <span class="text-xs tracking-[0.2em] uppercase font-medium">Care & Delivery</span>
+            <i data-lucide="plus" class="w-4 h-4 text-text-light group-hover:text-brand transition-all duration-300 accordion-icon"></i>
+          </button>
+          <div id="carePanel" class="accordion-panel overflow-hidden max-h-0 transition-all duration-500">
+            <div class="pb-6 space-y-3">
+              <div class="flex items-start gap-3">
+                <i data-lucide="droplets" class="w-4 h-4 text-brand mt-0.5 flex-shrink-0"></i>
+                <p class="text-sm text-text-light font-light leading-relaxed">Wipe clean with a soft, damp cloth. Avoid abrasive cleaners or scouring pads.</p>
+              </div>
+              <div class="flex items-start gap-3">
+                <i data-lucide="package" class="w-4 h-4 text-brand mt-0.5 flex-shrink-0"></i>
+                <p class="text-sm text-text-light font-light leading-relaxed">Each vase is carefully wrapped in protective tissue and shipped in a custom-fit recycled cardboard box.</p>
+              </div>
+              <div class="flex items-start gap-3">
+                <i data-lucide="clock" class="w-4 h-4 text-brand mt-0.5 flex-shrink-0"></i>
+                <p class="text-sm text-text-light font-light leading-relaxed">Standard delivery: 5–7 business days. Express: 2–3 business days.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Size Guide Modal -->
+  <div id="sizeGuideModal" class="fixed inset-0 z-[100] flex items-center justify-center px-4 opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="absolute inset-0 bg-black/30 backdrop-blur-sm" id="sizeGuideOverlay"></div>
+    <div class="relative bg-bg-card p-8 md:p-10 max-w-lg w-full shadow-2xl transform scale-95 transition-transform duration-300" id="sizeGuideContent">
+      <button id="closeSizeGuide" class="absolute top-4 right-4 text-text-light hover:text-brand transition-colors">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+      <h3 class="font-serif text-2xl font-light mb-6" style="font-family: 'Cormorant Garamond', serif;">Size Guide</h3>
+      <table class="w-full text-sm mb-4">
+        <thead>
+          <tr class="border-b border-bg-warm">
+            <th class="py-3 text-left text-xs tracking-[0.15em] uppercase font-medium text-text-light">Size</th>
+            <th class="py-3 text-left text-xs tracking-[0.15em] uppercase font-medium text-text-light">Height</th>
+            <th class="py-3 text-left text-xs tracking-[0.15em] uppercase font-medium text-text-light">Diameter</th>
+            <th class="py-3 text-left text-xs tracking-[0.15em] uppercase font-medium text-text-light">Price</th>
+          </tr>
+        </thead>
+        <tbody class="font-light text-text-light">
+          <tr class="border-b border-bg-warm/50"><td class="py-3">S</td><td class="py-3">18 cm</td><td class="py-3">12 cm</td><td class="py-3">$185</td></tr>
+          <tr class="border-b border-bg-warm/50"><td class="py-3">M</td><td class="py-3">24 cm</td><td class="py-3">16 cm</td><td class="py-3">$185</td></tr>
+          <tr class="border-b border-bg-warm/50"><td class="py-3">L</td><td class="py-3">32 cm</td><td class="py-3">20 cm</td><td class="py-3">$185</td></tr>
+          <tr><td class="py-3">XL</td><td class="py-3">40 cm</td><td class="py-3">24 cm</td><td class="py-3">$205</td></tr>
+        </tbody>
+      </table>
+      <p class="text-xs text-text-light font-light italic" style="font-family: 'Cormorant Garamond', serif; font-size: 14px;">Due to the handmade nature, dimensions may vary ±1cm</p>
+    </div>
+  </div>
+
+  <!-- Reviews Section -->
+  <section id="reviews" class="py-24 bg-bg-alt">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="text-center mb-16">
+        <span class="text-[10px] tracking-[0.3em] uppercase font-medium text-brand block mb-3">Testimonials</span>
+        <h2 class="font-serif text-4xl md:text-5xl font-light leading-tight" style="font-family: 'Cormorant Garamond', serif;">What Our Clients Say</h2>
+      </div>
+
+      <!-- Review Summary -->
+      <div class="max-w-3xl mx-auto mb-16 flex flex-col md:flex-row items-center gap-10 md:gap-16">
+        <div class="text-center">
+          <div class="font-serif text-6xl font-light text-brand mb-2" style="font-family: 'Cormorant Garamond', serif;">4.0</div>
+          <div class="flex items-center justify-center gap-0.5 mb-2">
+            <i data-lucide="star" class="w-4 h-4 fill-brand text-brand"></i>
+            <i data-lucide="star" class="w-4 h-4 fill-brand text-brand"></i>
+            <i data-lucide="star" class="w-4 h-4 fill-brand text-brand"></i>
+            <i data-lucide="star" class="w-4 h-4 fill-brand text-brand"></i>
+            <i data-lucide="star" class="w-4 h-4 text-bg-warm fill-bg-warm"></i>
+          </div>
+          <p class="text-xs text-text-light font-light">Based on 24 reviews</p>
+        </div>
+        <div class="flex-1 w-full space-y-2">
+          <div class="flex items-center gap-3"><span class="text-xs font-light text-text-light w-6">5</span><div class="flex-1 h-2 bg-bg-warm rounded-full overflow-hidden"><div class="h-full bg-brand rounded-full" style="width: 50%;"></div></div><span class="text-xs font-light text-text-light w-6">12</span></div>
+          <div class="flex items-center gap-3"><span class="text-xs font-light text-text-light w-6">4</span><div class="flex-1 h-2 bg-bg-warm rounded-full overflow-hidden"><div class="h-full bg-brand rounded-full" style="width: 33%;"></div></div><span class="text-xs font-light text-text-light w-6">8</span></div>
+          <div class="flex items-center gap-3"><span class="text-xs font-light text-text-light w-6">3</span><div class="flex-1 h-2 bg-bg-warm rounded-full overflow-hidden"><div class="h-full bg-brand rounded-full" style="width: 12%;"></div></div><span class="text-xs font-light text-text-light w-6">3</span></div>
+          <div class="flex items-center gap-3"><span class="text-xs font-light text-text-light w-6">2</span><div class="flex-1 h-2 bg-bg-warm rounded-full overflow-hidden"><div class="h-full bg-brand rounded-full" style="width: 4%;"></div></div><span class="text-xs font-light text-text-light w-6">1</span></div>
+          <div class="flex items-center gap-3"><span class="text-xs font-light text-text-light w-6">1</span><div class="flex-1 h-2 bg-bg-warm rounded-full overflow-hidden"><div class="h-full bg-brand rounded-full" style="width: 0%;"></div></div><span class="text-xs font-light text-text-light w-6">0</span></div>
+        </div>
+      </div>
+
+      <!-- Review Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <!-- Review 1 -->
+        <div class="bg-bg-card p-8 shadow-sm border border-bg-warm/50">
+          <div class="flex items-center gap-0.5 mb-4">
+            <i data-lucide="star" class="w-3.5 h-3.5 fill-brand text-brand"></i>
+            <i data-lucide="star" class="w-3.5 h-3.5 fill-brand text-brand"></i>
+            <i data-lucide="star" class="w-3.5 h-3.5 fill-brand text-brand"></i>
+            <i data-lucide="star" class="w-3.5 h-3.5 fill-brand text-brand"></i>
+            <i data-lucide="star" class="w-3.5 h-3.5 fill-brand text-brand"></i>
+          </div>
+          <p class="text-sm text-text-light font-light leading-relaxed mb-6 italic" style="font-family: 'Cormorant Garamond', serif; font-size: 16px;">
+            "Absolutely stunning piece. The glaze has these beautiful subtle variations that catch the light differently throughout the day. It's become the centrepiece of our living room."
+          </p>
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center">
+              <span class="text-brand text-xs font-medium">EM</span>
+            </div>
+            <div>
+              <p class="text-sm font-medium">Eleanor M.</p>
+              <p class="text-xs text-text-light font-light">Verified Buyer · Sage / L</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Review 2 -->
+        <div class="bg-bg-card p-8 shadow-sm border border-bg-warm/50">
+          <div class="flex items-center gap-0.5 mb-4">
+            <i data-lucide="star" class="w-3.5 h-3.5 fill-brand text-brand"></i>
+            <i data-lucide="star" class="w-3.5 h-3.5 fill-brand text-brand"></i>
+            <i data-lucide="star" class="w-3.5 h-3.5 fill-brand text-brand"></i>
+            <i data-lucide="star" class="w-3.5 h-3.5 fill-brand text-brand"></i>
+            <i data-lucide="star" class="w-3.5 h-3.5 text-bg-warm fill-bg-warm"></i>
+          </div>
+          <p class="text-sm text-text-light font-light leading-relaxed mb-6 italic" style="font-family: 'Cormorant Garamond', serif; font-size: 16px;">
+            "Beautiful craftsmanship and the packaging was impeccable. Took one star off only because the colour was slightly more muted than expected — but honestly, I love it even more in person."
+          </p>
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center">
+              <span class="text-brand text-xs font-medium">TK</span>
+            </div>
+            <div>
+              <p class="text-sm font-medium">Thomas K.</p>
+              <p class="text-xs text-text-light font-light">Verified Buyer · Sand / M</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Review 3 -->
+        <div class="bg-bg-card p-8 shadow-sm border border-bg-warm/50">
+          <div class="flex items-center gap-0.5 mb-4">
+            <i data-lucide="star" class="w-3.5 h-3.5 fill-brand text-brand"></i>
+            <i data-lucide="star" class="w-3.5 h-3.5 fill-brand text-brand"></i>
+            <i data-lucide="star" class="w-3.5 h-3.5 fill-brand text-brand"></i>
+            <i data-lucide="star" class="w-3.5 h-3.5 fill-brand text-brand"></i>
+            <i data-lucide="star" class="w-3.5 h-3.5 fill-brand text-brand"></i>
+          </div>
+          <p class="text-sm text-text-light font-light leading-relaxed mb-6 italic" style="font-family: 'Cormorant Garamond', serif; font-size: 16px;">
+            "Bought as a gift and the recipient was overjoyed. The XL size makes such a statement. Already planning to order the Charcoal for myself."
+          </p>
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center">
+              <span class="text-brand text-xs font-medium">SL</span>
+            </div>
+            <div>
+              <p class="text-sm font-medium">Sofia L.</p>
+              <p class="text-xs text-text-light font-light">Verified Buyer · Ivory / XL</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Related Products -->
+  <section class="py-24 px-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="flex items-end justify-between mb-12">
+        <div>
+          <span class="text-[10px] tracking-[0.3em] uppercase font-medium text-brand block mb-3">You May Also Like</span>
+          <h2 class="font-serif text-3xl md:text-4xl font-light" style="font-family: 'Cormorant Garamond', serif;">Related Pieces</h2>
+        </div>
+        <a href="#" class="hidden md:flex items-center gap-2 text-xs tracking-[0.15em] uppercase font-medium text-brand hover:text-brand-hover transition-colors">
+          View All <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </a>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <!-- Product 1 -->
+        <a href="#" class="group">
+          <div class="aspect-[3/4] overflow-hidden rounded-sm mb-4 bg-bg-card">
+            <img src="https://picsum.photos/seed/aurum-bowl/600/800.jpg" alt="Decorative Bowl" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+          </div>
+          <h4 class="font-serif text-lg font-light mb-1" style="font-family: 'Cormorant Garamond', serif;">Sculptural Bowl</h4>
+          <p class="text-sm text-text-light font-light">$120.00</p>
+        </a>
+
+        <!-- Product 2 -->
+        <a href="#" class="group">
+          <div class="aspect-[3/4] overflow-hidden rounded-sm mb-4 bg-bg-card">
+            <img src="https://picsum.photos/seed/aurum-plate/600/800.jpg" alt="Dinner Plate Set" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+          </div>
+          <h4 class="font-serif text-lg font-light mb-1" style="font-family: 'Cormorant Garamond', serif;">Dinner Plate Set</h4>
+          <p class="text-sm text-text-light font-light">$95.00</p>
+        </a>
+
+        <!-- Product 3 -->
+        <a href="#" class="group">
+          <div class="aspect-[3/4] overflow-hidden rounded-sm mb-4 bg-bg-card relative">
+            <img src="https://picsum.photos/seed/aurum-pitcher/600/800.jpg" alt="Ceramic Pitcher" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+            <span class="absolute top-3 left-3 bg-brand text-white text-[9px] tracking-[0.2em] uppercase px-2 py-1">Best Seller</span>
+          </div>
+          <h4 class="font-serif text-lg font-light mb-1" style="font-family: 'Cormorant Garamond', serif;">Ceramic Pitcher</h4>
+          <p class="text-sm text-text-light font-light">$145.00</p>
+        </a>
+
+        <!-- Product 4 -->
+        <a href="#" class="group">
+          <div class="aspect-[3/4] overflow-hidden rounded-sm mb-4 bg-bg-card">
+            <img src="https://picsum.photos/seed/aurum-cup/600/800.jpg" alt="Tea Cup Duo" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+          </div>
+          <h4 class="font-serif text-lg font-light mb-1" style="font-family: 'Cormorant Garamond', serif;">Tea Cup Duo</h4>
+          <p class="text-sm text-text-light font-light">$68.00</p>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Newsletter -->
+  <section class="py-24 px-6 bg-brand">
+    <div class="max-w-2xl mx-auto text-center">
+      <h2 class="font-serif text-3xl md:text-4xl font-light text-white mb-4" style="font-family: 'Cormorant Garamond', serif;">Stay Inspired</h2>
+      <p class="text-white/70 text-sm font-light mb-8">Subscribe for early access to new collections, artisan stories, and exclusive offers.</p>
+      <div class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+        <input type="email" placeholder="Your email address" class="flex-1 px-5 py-3.5 bg-white/10 border border-white/20 text-white placeholder-white/50 text-sm font-light focus:outline-none focus:border-white/50 transition-colors rounded-sm">
+        <button class="px-8 py-3.5 bg-white text-brand text-sm tracking-[0.15em] uppercase font-medium hover:bg-bg transition-colors duration-300 rounded-sm">Subscribe</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-text text-bg/70 py-16 px-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+        <div>
+          <h3 class="font-display text-xl tracking-[0.2em] text-bg mb-4">AURUM</h3>
+          <p class="text-sm font-light leading-relaxed">Objects of enduring beauty,<br>crafted with intention.</p>
+        </div>
+        <div>
+          <h4 class="text-xs tracking-[0.2em] uppercase font-medium text-bg mb-4">Shop</h4>
+          <ul class="space-y-2.5">
+            <li><a href="#" class="text-sm font-light hover:text-bg transition-colors">New Arrivals</a></li>
+            <li><a href="#" class="text-sm font-light hover:text-bg transition-colors">Living</a></li>
+            <li><a href="#" class="text-sm font-light hover:text-bg transition-colors">Kitchen</a></li>
+            <li><a href="#" class="text-sm font-light hover:text-bg transition-colors">Gift Cards</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-xs tracking-[0.2em] uppercase font-medium text-bg mb-4">About</h4>
+          <ul class="space-y-2.5">
+            <li><a href="#" class="text-sm font-light hover:text-bg transition-colors">Our Story</a></li>
+            <li><a href="#" class="text-sm font-light hover:text-bg transition-colors">Artisan Partners</a></li>
+            <li><a href="#" class="text-sm font-light hover:text-bg transition-colors">Sustainability</a></li>
+            <li><a href="#" class="text-sm font-light hover:text-bg transition-colors">Journal</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-xs tracking-[0.2em] uppercase font-medium text-bg mb-4">Support</h4>
+          <ul class="space-y-2.5">
+            <li><a href="#" class="text-sm font-light hover:text-bg transition-colors">Contact</a></li>
+            <li><a href="#" class="text-sm font-light hover:text-bg transition-colors">Shipping & Returns</a></li>
+            <li><a href="#" class="text-sm font-light hover:text-bg transition-colors">FAQ</a></li>
+            <li><a href="#" class="text-sm font-light hover:text-bg transition-colors">Care Guide</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="border-t border-white/10 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+        <p class="text-xs font-light opacity-60">© 2025 AURUM. All rights reserved.</p>
+        <div class="flex items-center gap-6">
+          <a href="#" class="text-bg/50 hover:text-bg transition-colors"><i data-lucide="instagram" class="w-4 h-4"></i></a>
+          <a href="#" class="text-bg/50 hover:text-bg transition-colors"><i data-lucide="facebook" class="w-4 h-4"></i></a>
+          <a href="#" class="text-bg/50 hover:text-bg transition-colors"><i data-lucide="twitter" class="w-4 h-4"></i></a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+
+    // =====================
+    // THUMBNAIL GALLERY
+    // =====================
+    const mainImg = document.getElementById('mainImage');
+    const thumbs = document.querySelectorAll('.thumbnail-btn');
+    const zoomLens = document.getElementById('zoomLens');
+    const mainWrap = document.getElementById('mainImageWrap');
+
+    thumbs.forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Update active state
+        thumbs.forEach(t => {
+          t.classList.remove('border-brand');
+          t.classList.add('border-transparent', 'opacity-70');
+        });
+        btn.classList.add('border-brand');
+        btn.classList.remove('border-transparent', 'opacity-70');
+
+        // Update main image with transition
+        mainImg.style.opacity = '0';
+        setTimeout(() => {
+          mainImg.src = btn.dataset.src;
+          mainImg.style.opacity = '1';
+        }, 200);
+      });
+    });
+
+    mainImg.style.transition = 'opacity 0.3s ease, transform 0.7s ease';
+
+    // =====================
+    // ZOOM LENS (Desktop)
+    // =====================
+    if (window.innerWidth > 768) {
+      mainWrap.addEventListener('mousemove', (e) => {
+        const rect = mainWrap.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        zoomLens.style.left = (x - 90) + 'px';
+        zoomLens.style.top = (y - 90) + 'px';
+
+        const bgX = (x / rect.width) * 100;
+        const bgY = (y / rect.height) * 100;
+
+        const activeThumb = document.querySelector('.thumbnail-btn.border-brand');
+        const zoomSrc = activeThumb ? activeThumb.dataset.zoom : mainImg.src;
+        zoomLens.style.backgroundImage = `url(${zoomSrc})`;
+        zoomLens.style.backgroundSize = `${rect.width * 2}px ${rect.height * 2}px`;
+        zoomLens.style.backgroundPosition = `${bgX}% ${bgY}%`;
+      });
+
+      mainWrap.addEventListener('mouseleave', () => {
+        zoomLens.style.opacity = '0';
+      });
+
+      mainWrap.addEventListener('mouseenter', () => {
+        zoomLens.style.opacity = '1';
+      });
+    }
+
+    // =====================
+    // COLOR PICKER
+    // =====================
+    const colorSwatches = document.querySelectorAll('.color-swatch');
+    const colorLabel = document.getElementById('colorLabel');
+
+    colorSwatches.forEach(swatch => {
+      swatch.addEventListener('click', () => {
+        colorSwatches.forEach(s => {
+          s.classList.remove('border-brand');
+          s.classList.add('border-transparent');
+        });
+        swatch.classList.add('border-brand');
+        swatch.classList.remove('border-transparent');
+        colorLabel.textContent = swatch.dataset.color;
+      });
+    });
+
+    // =====================
+    // SIZE PICKER
+    // =====================
+    const sizeBtns = document.querySelectorAll('.size-btn');
+
+    sizeBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        sizeBtns.forEach(b => {
+          b.classList.remove('border-brand', 'bg-brand/5', 'text-brand');
+          b.classList.add('border-bg-warm', 'text-text-light');
+        });
+        btn.classList.add('border-brand', 'bg-brand/5', 'text-brand');
+        btn.classList.remove('border-bg-warm', 'text-text-light');
+      });
+    });
+
+    // =====================
+    // QUANTITY
+    // =====================
+    const qtyInput = document.getElementById('qtyInput');
+    const qtyMinus = document.getElementById('qtyMinus');
+    const qtyPlus = document.getElementById('qtyPlus');
+
+    qtyMinus.addEventListener('click', () => {
+      const val = parseInt(qtyInput.value);
+      if (val > 1) qtyInput.value = val - 1;
+    });
+
+    qtyPlus.addEventListener('click', () => {
+      const val = parseInt(qtyInput.value);
+      if (val < 10) qtyInput.value = val + 1;
+    });
+
+    qtyInput.addEventListener('change', () => {
+      let val = parseInt(qtyInput.value);
+      if (isNaN(val) || val < 1) val = 1;
+      if (val > 10) val = 10;
+      qtyInput.value = val;
+    });
+
+    // =====================
+    // ADD TO CART
+    // =====================
+    const addToCartBtn = document.getElementById('addToCartBtn');
+    const cartCount = document.getElementById('cartCount');
+    const cartToast = document.getElementById('cartToast');
+    let totalInCart = 0;
+
+    addToCartBtn.addEventListener('click', () => {
+      const qty = parseInt(qtyInput.value);
+      totalInCart += qty;
+      cartCount.textContent = totalInCart;
+
+      // Animate button
+      addToCartBtn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i> Added!';
+      addToCartBtn.classList.add('bg-brand-hover');
+      lucide.createIcons();
+
+      setTimeout(() => {
+        addToCartBtn.innerHTML = '<i data-lucide="shopping-bag" class="w-4 h-4"></i> Add to Cart';
+        addToCartBtn.classList.remove('bg-brand-hover');
+        lucide.createIcons();
+      }, 1500);
+
+      // Show toast
+      cartToast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+      cartToast.classList.add('translate-y-0', 'opacity-100');
+
+      setTimeout(() => {
+        cartToast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+        cartToast.classList.remove('translate-y-0', 'opacity-100');
+      }, 3000);
+    });
+
+    // =====================
+    // WISHLIST
+    // =====================
+    const wishlistBtn = document.getElementById('wishlistBtn');
+    let wishlisted = false;
+
+    wishlistBtn.addEventListener('click', () => {
+      wishlisted = !wishlisted;
+      if (wishlisted) {
+        wishlistBtn.innerHTML = '<i data-lucide="heart" class="w-4 h-4 fill-brand text-brand"></i>';
+        wishlistBtn.classList.add('text-brand');
+      } else {
+        wishlistBtn.innerHTML = '<i data-lucide="heart" class="w-4 h-4"></i>';
+        wishlistBtn.classList.remove('text-brand');
+      }
+      lucide.createIcons();
+    });
+
+    // =====================
+    // ACCORDIONS
+    // =====================
+    const accordionTriggers = document.querySelectorAll('.accordion-trigger');
+
+    accordionTriggers.forEach(trigger => {
+      trigger.addEventListener('click', () => {
+        const panel = document.getElementById(trigger.dataset.target);
+        const icon = trigger.querySelector('.accordion-icon');
+        const isOpen = panel.style.maxHeight && panel.style.maxHeight !== '0px';
+
+        if (isOpen) {
+          panel.style.maxHeight = '0px';
+          icon.setAttribute('data-lucide', 'plus');
+        } else {
+          panel.style.maxHeight = panel.scrollHeight + 'px';
+          icon.setAttribute('data-lucide', 'minus');
+        }
+        lucide.createIcons();
+      });
+    });
+
+    // =====================
+    // SIZE GUIDE MODAL
+    // =====================
+    const sizeGuideModal = document.getElementById('sizeGuideModal');
+    const sizeGuideContent = document.getElementById('sizeGuideContent');
+    const sizeGuideOverlay = document.getElementById('sizeGuideOverlay');
+    const closeSizeGuide = document.getElementById('closeSizeGuide');
+
+    function openModal() {
+      sizeGuideModal.classList.remove('opacity-0', 'pointer-events-none');
+      sizeGuideModal.classList.add('opacity-100');
+      sizeGuideContent.classList.remove('scale-95');
+      sizeGuideContent.classList.add('scale-100');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      sizeGuideModal.classList.add('opacity-0', 'pointer-events-none');
+      sizeGuideModal.classList.remove('opacity-100');
+      sizeGuideContent.classList.add('scale-95');
+      sizeGuideContent.classList.remove('scale-100');
+      document.body.style.overflow = '';
+    }
+
+    document.getElementById('sizeGuideBtn').addEventListener('click', openModal);
+    closeSizeGuide.addEventListener('click', closeModal);
+    sizeGuideOverlay.addEventListener('click', closeModal);
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
+  </script>
+</body>
+</html>
