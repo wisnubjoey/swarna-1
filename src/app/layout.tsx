@@ -30,6 +30,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={cn("font-mono", jetbrainsMono.variable)}>
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Outfit:wght@200;300;400;500&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

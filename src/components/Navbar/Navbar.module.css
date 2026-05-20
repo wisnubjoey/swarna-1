@@ -37,6 +37,7 @@
   align-items: center;
   justify-content: space-between;
   height: 80px;
+  position: relative;
 }
 
 .navLogo {
@@ -56,6 +57,9 @@
   display: none;
   align-items: center;
   gap: 48px;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 @media (min-width: 768px) {

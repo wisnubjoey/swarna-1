@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Navbar } from '../Navbar/Navbar';
 import styles from './Landing.module.css';
 
 export function Landing() {
@@ -38,14 +37,9 @@ export function Landing() {
 
   return (
     <div className={styles.landing}>
-      <link
-        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Outfit:wght@200;300;400;500&display=swap"
-        rel="stylesheet"
-      />
+
       
       <div className={styles.grainOverlay}></div>
-
-      <Navbar />
 
       {/* Hero Section */}
       <section className={styles.heroSection}>

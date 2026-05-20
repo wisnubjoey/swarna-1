@@ -14,14 +14,17 @@ export function Navbar() {
       const anchor = target.closest('a');
       
       if (anchor && anchor.hash && anchor.hash.startsWith('#') && anchor.origin === window.location.origin) {
-        e.preventDefault();
-        const element = document.querySelector(anchor.hash);
-        if (element) {
-          element.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
-          });
-          setMenuOpen(false);
+        const isSamePage = window.location.pathname === anchor.pathname || (window.location.pathname === '/' && anchor.pathname === '/');
+        if (isSamePage) {
+          e.preventDefault();
+          const element = document.querySelector(anchor.hash);
+          if (element) {
+            element.scrollIntoView({
+              behavior: 'smooth',
+              block: 'start'
+            });
+            setMenuOpen(false);
+          }
         }
       }
     };
@@ -40,10 +43,10 @@ export function Navbar() {
             </Link>
 
             <div className={styles.navLinks}>
-              <a href="#collection" className={styles.navLinkItem}>Collection</a>
-              <a href="#heritage" className={styles.navLinkItem}>Heritage</a>
-              <a href="#artisans" className={styles.navLinkItem}>Artisans</a>
-              <a href="#contact" className={styles.navLinkItem}>Contact</a>
+              <Link href="/#collection" className={styles.navLinkItem}>Collection</Link>
+              <Link href="/#heritage" className={styles.navLinkItem}>Heritage</Link>
+              <Link href="/#artisans" className={styles.navLinkItem}>Artisans</Link>
+              <Link href="/#contact" className={styles.navLinkItem}>Contact</Link>
             </div>
 
             <button
@@ -64,10 +67,10 @@ export function Navbar() {
         className={`${styles.mobileMenu} ${menuOpen ? styles.active : ''}`}
       >
         <div className={styles.mobileMenuContent}>
-          <a href="#collection" className={styles.mobileMenuLink} onClick={() => setMenuOpen(false)}>Collection</a>
-          <a href="#heritage" className={styles.mobileMenuLink} onClick={() => setMenuOpen(false)}>Heritage</a>
-          <a href="#artisans" className={styles.mobileMenuLink} onClick={() => setMenuOpen(false)}>Artisans</a>
-          <a href="#contact" className={styles.mobileMenuLink} onClick={() => setMenuOpen(false)}>Contact</a>
+          <Link href="/#collection" className={styles.mobileMenuLink} onClick={() => setMenuOpen(false)}>Collection</Link>
+          <Link href="/#heritage" className={styles.mobileMenuLink} onClick={() => setMenuOpen(false)}>Heritage</Link>
+          <Link href="/#artisans" className={styles.mobileMenuLink} onClick={() => setMenuOpen(false)}>Artisans</Link>
+          <Link href="/#contact" className={styles.mobileMenuLink} onClick={() => setMenuOpen(false)}>Contact</Link>
         </div>
       </div>
     </>
