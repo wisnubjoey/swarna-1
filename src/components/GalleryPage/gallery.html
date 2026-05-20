@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Components | Traditional Dress</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Outfit:wght@200;300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #FAFAF8;
+      --bg-secondary: #F5F4F0;
+      --fg: #1A1A18;
+      --fg-muted: #7A7A74;
+      --accent: #C9A227;
+      --accent-soft: #F5EFC6;
+      --border: #E5E4E0;
+      --card: #FFFFFF;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      border-radius: 0 !important;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: var(--bg);
+      color: var(--fg);
+      padding: 40px 20px;
+    }
+
+    .font-display {
+      font-family: 'Cormorant Garamond', serif;
+    }
+
+    /* Product Card */
+    .product-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+    }
+
+    .product-card:hover {
+      border-color: var(--accent);
+      box-shadow: 0 20px 40px -20px rgba(201, 162, 39, 0.2);
+    }
+
+    /* Image Container */
+    .product-image {
+      position: relative;
+      overflow: hidden;
+      aspect-ratio: 3/4;
+      background: var(--bg-secondary);
+    }
+
+    .product-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .product-card:hover .product-image img {
+      transform: scale(1.05);
+    }
+
+    /* Price Tag - Stamp Style */
+    .price-tag {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: var(--accent);
+      color: var(--fg);
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      box-shadow: 0 2px 8px rgba(201, 162, 39, 0.3);
+      z-index: 10;
+      transition: transform 0.3s ease;
+    }
+
+    .product-card:hover .price-tag {
+      transform: translateY(-2px);
+    }
+
+    /* Sale Price Tag */
+    .price-tag.sale {
+      background: var(--fg);
+      color: var(--bg);
+    }
+
+    .price-tag.sale .original-price {
+      text-decoration: line-through;
+      opacity: 0.5;
+      margin-right: 8px;
+      font-size: 12px;
+    }
+
+    /* Product Badge */
+    .product-badge {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      background: var(--bg);
+      color: var(--fg);
+      padding: 6px 12px;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      font-weight: 400;
+      z-index: 10;
+    }
+
+    /* Quick Actions */
+    .quick-actions {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 16px;
+      background: linear-gradient(to top, rgba(26, 26, 24, 0.8), transparent);
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.4s ease;
+    }
+
+    .product-card:hover .quick-actions {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .btn-quick {
+      background: var(--bg);
+      color: var(--fg);
+      padding: 12px 20px;
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 400;
+      width: 100%;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-quick:hover {
+      background: var(--accent);
+      color: var(--bg);
+    }
+
+    /* Product Info */
+    .product-info {
+      padding: 20px;
+    }
+
+    .product-category {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .product-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 22px;
+      font-weight: 400;
+      margin-bottom: 8px;
+      line-height: 1.3;
+    }
+
+    .product-description {
+      font-size: 13px;
+      color: var(--fg-muted);
+      line-height: 1.6;
+      font-weight: 300;
+      margin-bottom: 16px;
+    }
+
+    /* Color Swatches */
+    .color-swatches {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .swatch {
+      width: 20px;
+      height: 20px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .swatch:hover {
+      transform: scale(1.1);
+    }
+
+    .swatch.active {
+      border-color: var(--fg);
+      box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px var(--fg);
+    }
+
+    /* Rating */
+    .rating {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--fg-muted);
+    }
+
+    .rating svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Horizontal Card Variant */
+    .product-card.horizontal {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+    }
+
+    .product-card.horizontal .product-image {
+      aspect-ratio: auto;
+      height: 100%;
+    }
+
+    .product-card.horizontal .product-info {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    @media (max-width: 640px) {
+      .product-card.horizontal {
+        grid-template-columns: 140px 1fr;
+      }
+    }
+
+    /* Minimal Card Variant */
+    .product-card.minimal {
+      border: none;
+      background: transparent;
+    }
+
+    .product-card.minimal .product-image {
+      border: 1px solid var(--border);
+    }
+
+    .product-card.minimal:hover {
+      border: none;
+      box-shadow: none;
+    }
+
+    .product-card.minimal .product-name {
+      font-size: 18px;
+    }
+
+    /* Focus states */
+    button:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    /* Animation */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(30px);
+      animation: fadeUp 0.8s ease-out forwards;
+    }
+
+    @keyframes fadeUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+    .delay-4 { animation-delay: 0.4s; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="max-w-7xl mx-auto">
+    
+    <!-- Section Header -->
+    <div class="text-center mb-16">
+      <p class="text-xs tracking-widest uppercase text-[var(--accent)] mb-3">Product Components</p>
+      <h1 class="font-display text-4xl md:text-5xl font-light">Traditional Dress Collection</h1>
+    </div>
+
+    <!-- Grid Layout -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
+      
+      <!-- Product Card 1 - Standard -->
+      <article class="product-card fade-up delay-1">
+        <div class="product-image">
+          <span class="price-tag">$2,450</span>
+          <img src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&q=80" alt="Ceremonial Silk Kimono">
+          <div class="quick-actions">
+            <button class="btn-quick">Quick View</button>
+          </div>
+        </div>
+        <div class="product-info">
+          <p class="product-category">Ceremonial</p>
+          <h3 class="product-name">Silk Kimono with Embroidered Cranes</h3>
+          <p class="product-description">Handcrafted by master artisans in Kyoto using traditional techniques passed down through generations.</p>
+          <div class="flex items-center justify-between">
+            <div class="rating">
+              <svg viewBox="0 0 20 20" fill="var(--accent)">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+              </svg>
+              <span>4.9 (24)</span>
+            </div>
+            <div class="color-swatches">
+              <span class="swatch active" style="background: #1A1A18;" title="Black"></span>
+              <span class="swatch" style="background: #8B0000;" title="Crimson"></span>
+              <span class="swatch" style="background: #00008B;" title="Navy"></span>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Product Card 2 - On Sale -->
+      <article class="product-card fade-up delay-2">
+        <div class="product-image">
+          <span class="product-badge">Limited Edition</span>
+          <span class="price-tag sale">
+            <span class="original-price">$3,200</span>
+            $2,880
+          </span>
+          <img src="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=600&q=80" alt="Vintage Wedding Kimono">
+          <div class="quick-actions">
+            <button class="btn-quick">Quick View</button>
+          </div>
+        </div>
+        <div class="product-info">
+          <p class="product-category">Bridal</p>
+          <h3 class="product-name">Vintage Wedding Kimono with Gold Thread</h3>
+          <p class="product-description">Heirloom-quality piece featuring intricate gold embroidery on pure silk satin.</p>
+          <div class="flex items-center justify-between">
+            <div class="rating">
+              <svg viewBox="0 0 20 20" fill="var(--accent)">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+              </svg>
+              <span>5.0 (18)</span>
+            </div>
+            <div class="color-swatches">
+              <span class="swatch active" style="background: #FFFAF0;" title="Ivory"></span>
+              <span class="swatch" style="background: #F5F5DC;" title="Beige"></span>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Product Card 3 - New Arrival -->
+      <article class="product-card fade-up delay-3">
+        <div class="product-image">
+          <span class="product-badge">New Arrival</span>
+          <span class="price-tag">$890</span>
+          <img src="https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=600&q=80" alt="Modern Obi Belt">
+          <div class="quick-actions">
+            <button class="btn-quick">Quick View</button>
+          </div>
+        </div>
+        <div class="product-info">
+          <p class="product-category">Accessories</p>
+          <h3 class="product-name">Contemporary Obi Belt with Geometric Pattern</h3>
+          <p class="product-description">Modern interpretation of the traditional obi, perfect for both formal and casual wear.</p>
+          <div class="flex items-center justify-between">
+            <div class="rating">
+              <svg viewBox="0 0 20 20" fill="var(--accent)">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+              </svg>
+              <span>4.8 (42)</span>
+            </div>
+            <div class="color-swatches">
+              <span class="swatch active" style="background: #C9A227;" title="Gold"></span>
+              <span class="swatch" style="background: #2F4F4F;" title="Dark Teal"></span>
+              <span class="swatch" style="background: #800020;" title="Burgundy"></span>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Product Card 4 -->
+      <article class="product-card fade-up delay-4">
+        <div class="product-image">
+          <span class="price-tag">$1,650</span>
+          <img src="https://images.unsplash.com/photo-1594938328870-9623159c8c99?w=600&q=80" alt="Yukata Summer Robe">
+          <div class="quick-actions">
+            <button class="btn-quick">Quick View</button>
+          </div>
+        </div>
+        <div class="product-info">
+          <p class="product-category">Everyday</p>
+          <h3 class="product-name">Cotton Yukata with Indigo Dye Pattern</h3>
+          <p class="product-description">Lightweight summer kimono featuring traditional Shibori dyeing technique.</p>
+          <div class="flex items-center justify-between">
+            <div class="rating">
+              <svg viewBox="0 0 20 20" fill="var(--accent)">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+              </svg>
+              <span>4.7 (56)</span>
+            </div>
+            <div class="color-swatches">
+              <span class="swatch active" style="background: #4B0082;" title="Indigo"></span>
+              <span class="swatch" style="background: #E6E6FA;" title="Lavender"></span>
+            </div>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <!-- Horizontal Cards Section -->
+    <div class="mb-16">
+      <h2 class="font-display text-2xl font-light mb-8">Horizontal Layout</h2>
+      
+      <div class="space-y-4">
+        <!-- Horizontal Card 1 -->
+        <article class="product-card horizontal fade-up">
+          <div class="product-image">
+            <span class="price-tag">$4,200</span>
+            <img src="https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?w=600&q=80" alt="Antique Samurai Attire">
+          </div>
+          <div class="product-info">
+            <div class="flex items-start justify-between mb-4">
+              <div>
+                <p class="product-category">Antique Collection</p>
+                <h3 class="product-name">Edo Period Samurai Formal Attire</h3>
+              </div>
+              <span class="product-badge">Authentic</span>
+            </div>
+            <p class="product-description mb-4">Rare preserved piece from the late Edo period, authenticated by the Kyoto National Museum. Each garment tells a story of honor and tradition, featuring original family crests and hand-woven silk.</p>
+            <div class="flex items-center justify-between mt-auto">
+              <div class="rating">
+                <svg viewBox="0 0 20 20" fill="var(--accent)">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                </svg>
+                <span>5.0 (8)</span>
+              </div>
+              <button class="btn-quick w-auto">Inquire Now</button>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+
+    <!-- Minimal Cards Section -->
+    <div>
+      <h2 class="font-display text-2xl font-light mb-8">Minimal Layout</h2>
+      
+      <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <!-- Minimal Card 1 -->
+        <article class="product-card minimal fade-up">
+          <div class="product-image">
+            <span class="price-tag" style="padding: 6px 12px; font-size: 12px;">$320</span>
+            <img src="https://images.unsplash.com/photo-1602028915047-37269d1a73f7?w=400&q=80" alt="Silk Scarf">
+          </div>
+          <div class="product-info p-0 pt-4">
+            <p class="product-category" style="margin-bottom: 4px;">Accessories</p>
+            <h3 class="product-name" style="font-size: 16px;">Hand-painted Silk Scarf</h3>
+          </div>
+        </article>
+
+        <!-- Minimal Card 2 -->
+        <article class="product-card minimal fade-up delay-1">
+          <div class="product-image">
+            <span class="price-tag sale" style="padding: 6px 12px; font-size: 12px;">
+              <span class="original-price">$480</span>$420
+            </span>
+            <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80" alt="Embroidered Pouch">
+          </div>
+          <div class="product-info p-0 pt-4">
+            <p class="product-category" style="margin-bottom: 4px;">Small Goods</p>
+            <h3 class="product-name" style="font-size: 16px;">Embroidered Kinchaku Pouch</h3>
+          </div>
+        </article>
+
+        <!-- Minimal Card 3 -->
+        <article class="product-card minimal fade-up delay-2">
+          <div class="product-image">
+            <span class="price-tag" style="padding: 6px 12px; font-size: 12px;">$1,850</span>
+            <img src="https://images.unsplash.com/photo-1605518216938-7c31b7b14ad0?w=400&q=80" alt="Silk Fan">
+          </div>
+          <div class="product-info p-0 pt-4">
+            <p class="product-category" style="margin-bottom: 4px;">Ceremonial</p>
+            <h3 class="product-name" style="font-size: 16px;">Gold-leaf Sensu Fan</h3>
+          </div>
+        </article>
+
+        <!-- Minimal Card 4 -->
+        <article class="product-card minimal fade-up delay-3">
+          <div class="product-image">
+            <span class="price-tag" style="padding: 6px 12px; font-size: 12px;">$580</span>
+            <img src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=400&q=80" alt="Casual Yukata">
+          </div>
+          <div class="product-info p-0 pt-4">
+            <p class="product-category" style="margin-bottom: 4px;">Everyday</p>
+            <h3 class="product-name" style="font-size: 16px;">Casual Cotton Yukata</h3>
+          </div>
+        </article>
+
+        <!-- Minimal Card 5 -->
+        <article class="product-card minimal fade-up delay-4">
+          <div class="product-image">
+            <span class="price-tag" style="padding: 6px 12px; font-size: 12px;">$240</span>
+            <img src="https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=400&q=80" alt="Tabi Socks">
+          </div>
+          <div class="product-info p-0 pt-4">
+            <p class="product-category" style="margin-bottom: 4px;">Footwear</p>
+            <h3 class="product-name" style="font-size: 16px;">Traditional Tabi Socks</h3>
+          </div>
+        </article>
+
+        <!-- Minimal Card 6 -->
+        <article class="product-card minimal fade-up delay-5">
+          <div class="product-image">
+            <span class="price-tag sale" style="padding: 6px 12px; font-size: 12px;">
+              <span class="original-price">$1,200</span>$980
+            </span>
+            <img src="https://images.unsplash.com/photo-1594938328870-9623159c8c99?w=400&q=80" alt="Obi">
+          </div>
+          <div class="product-info p-0 pt-4">
+            <p class="product-category" style="margin-bottom: 4px;">Accessories</p>
+            <h3 class="product-name" style="font-size: 16px;">Nagoya Obi with Crane</h3>
+          </div>
+        </article>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Swatch click handler
+    document.querySelectorAll('.swatch').forEach(swatch => {
+      swatch.addEventListener('click', function() {
+        const swatches = this.closest('.color-swatches');
+        swatches.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+
+    // Intersection Observer for fade-up animations
+    const fadeElements = document.querySelectorAll('.fade-up');
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.animationPlayState = 'running';
+          observer.unobserve(entry.target);
+        }
+      });
+    }, {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    });
+
+    fadeElements.forEach(el => {
+      el.style.animationPlayState = 'paused';
+      observer.observe(el);
+    });
+
+    // Quick View button interaction
+    document.querySelectorAll('.btn-quick').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const card = this.closest('.product-card');
+        const productName = card.querySelector('.product-name').textContent;
+        console.log(`Quick view for: ${productName}`);
+        // Here you would typically open a modal
+      });
+    });
+  </script>
+</body>
+</html>

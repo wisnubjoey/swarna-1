@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Navbar } from '../Navbar/Navbar';
 import styles from './Landing.module.css';
 
 export function Landing() {
-  const [menuOpen, setMenuOpen] = useState(false);
   const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
@@ -31,20 +31,6 @@ export function Landing() {
 
     window.addEventListener('scroll', handleScroll);
 
-    // Smooth scroll for navigation links
-    document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
-      anchor.addEventListener('click', function (this: HTMLAnchorElement, e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href') as string);
-        if (target) {
-          target.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
-          });
-        }
-      });
-    });
-
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
@@ -59,46 +45,7 @@ export function Landing() {
       
       <div className={styles.grainOverlay}></div>
 
-      {/* Navigation */}
-      <nav className={styles.navigation}>
-        <div className={styles.navContent}>
-          <div className={styles.navInner}>
-            <a href="#" className={styles.navLogo}>
-              <span>T</span>RADITIONAL
-            </a>
-
-            <div className={styles.navLinks}>
-              <a href="#collection" className={`${styles.navLinkItem} ${styles.navLink}`}>Collection</a>
-              <a href="#heritage" className={`${styles.navLinkItem} ${styles.navLink}`}>Heritage</a>
-              <a href="#artisans" className={`${styles.navLinkItem} ${styles.navLink}`}>Artisans</a>
-              <a href="#contact" className={`${styles.navLinkItem} ${styles.navLink}`}>Contact</a>
-            </div>
-
-            <button
-              id="menuBtn"
-              className={styles.menuBtn}
-              aria-label="Open menu"
-              onClick={() => setMenuOpen(!menuOpen)}
-            >
-              <span style={{ transform: menuOpen ? 'rotate(45deg) translateY(4px)' : 'none' }}></span>
-              <span style={{ transform: menuOpen ? 'rotate(-45deg) translateY(-4px)' : 'none' }}></span>
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      {/* Mobile Menu */}
-      <div
-        id="mobileMenu"
-        className={`${styles.mobileMenu} ${menuOpen ? styles.active : ''}`}
-      >
-        <div className={styles.mobileMenuContent}>
-          <a href="#collection" className={styles.mobileMenuLink} onClick={() => setMenuOpen(false)}>Collection</a>
-          <a href="#heritage" className={styles.mobileMenuLink} onClick={() => setMenuOpen(false)}>Heritage</a>
-          <a href="#artisans" className={styles.mobileMenuLink} onClick={() => setMenuOpen(false)}>Artisans</a>
-          <a href="#contact" className={styles.mobileMenuLink} onClick={() => setMenuOpen(false)}>Contact</a>
-        </div>
-      </div>
+      <Navbar />
 
       {/* Hero Section */}
       <section className={styles.heroSection}>
