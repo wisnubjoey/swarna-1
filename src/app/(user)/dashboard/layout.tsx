@@ -1,9 +1,9 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { AdminSidebar } from "@/components/Admin/AdminSidebar";
+import { UserSidebar } from "@/components/User/UserSidebar";
 
-export default async function AdminLayout({
+export default async function UserLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -15,14 +15,10 @@ export default async function AdminLayout({
   if (!session) {
     redirect("/sign-in");
   }
-  
-  if (session.user.role !== "admin") {
-    redirect("/");
-  }
 
   return (
     <div className="flex min-h-screen">
-      <AdminSidebar />
+      <UserSidebar />
       <main className="flex-1 ml-[260px]">
         {children}
       </main>
