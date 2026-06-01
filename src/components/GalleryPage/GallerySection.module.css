@@ -230,20 +230,6 @@
   justify-content: space-between;
 }
 
-.rating {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: var(--admin-sidebar-fg-muted);
-}
-
-.ratingIcon {
-  width: 14px;
-  height: 14px;
-  fill: var(--admin-sidebar-accent);
-}
-
 .colorSwatches {
   display: flex;
   gap: 8px;

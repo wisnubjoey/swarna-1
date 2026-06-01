@@ -1,7 +1,9 @@
-import { GallerySection } from "@/components/GalleryPage/GallerySection";
+import { ProductPreview } from "@/components/Admin/productPreview/ProductPreview";
 
-export default function test() {
+export default function TestPage() {
   return (
-    <GallerySection />
+    <main>
+      <ProductPreview />
+    </main>
   );
 }

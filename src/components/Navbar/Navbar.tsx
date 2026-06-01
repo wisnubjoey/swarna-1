@@ -43,7 +43,8 @@ export function Navbar() {
             </Link>
 
             <div className={styles.navLinks}>
-              <Link href="/#collection" className={styles.navLinkItem}>Collection</Link>
+              <Link href="/Gallery" className={styles.navLinkItem}>Gallery</Link>
+              <Link href="/#contact" className={styles.navLinkItem}>About Us</Link>
               <Link href="/#heritage" className={styles.navLinkItem}>Heritage</Link>
               <Link href="/#artisans" className={styles.navLinkItem}>Artisans</Link>
               <Link href="/#contact" className={styles.navLinkItem}>Contact</Link>

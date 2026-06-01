@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { Eye, Pencil } from 'lucide-react';
 
 // Define the exact shape of the data we are passing from page.tsx
 type ProductUIProps = {
@@ -145,7 +146,7 @@ const ProductUI: React.FC<ProductUIProps> = ({ product }) => {
         {/* Gold Divider */}
         <div className="h-px bg-gradient-to-r from-transparent via-[rgba(201,168,76,0.3)] to-transparent" />
 
-        {/* Price & Edit Row */}
+        {/* Price & Action Row */}
         <div className="flex items-end justify-between gap-4">
 
           {/* Price Block */}
@@ -158,13 +159,24 @@ const ProductUI: React.FC<ProductUIProps> = ({ product }) => {
             </span>
           </div>
 
-          {/* Edit Button */}
-          <Link 
-            href={`/admin/products/${product.id}/edit`}
-            className="bg-gradient-to-br from-[#c9a84c] to-[#a6872e] shadow-[0_2px_8px_rgba(201,168,76,0.3)] hover:from-[#d4b65e] hover:to-[#b89438] hover:shadow-[0_4px_16px_rgba(201,168,76,0.4)] text-white text-xs font-semibold uppercase tracking-[0.15em] px-6 py-3.5 transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-2.5 flex-shrink-0"
-          >
-            Edit
-          </Link>
+          <div className="flex gap-2">
+            {/* Preview Button */}
+            <button 
+              className="bg-white border border-none text-[#3a2a1a] hover:bg-[#faf7f2] hover:border-[rgba(58,42,26,0.25)] text-xs font-semibold uppercase tracking-[0.15em] px-6 py-3.5 transition-all duration-300 active:translate-y-0 flex items-center gap-2.5 flex-shrink-0"
+            >
+              <Eye className="w-4 h-4" />
+              
+            </button>
+
+            {/* Edit Button */}
+            <Link 
+              href={`/admin/products/${product.id}/edit`}
+              className="bg-gradient-to-br from-[#c9a84c] to-[#a6872e] shadow-[0_2px_8px_rgba(201,168,76,0.3)] hover:from-[#d4b65e] hover:to-[#b89438] hover:shadow-[0_4px_16px_rgba(201,168,76,0.4)] text-white text-xs font-semibold uppercase tracking-[0.15em] px-6 py-3.5 transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-2.5 flex-shrink-0"
+            >
+              <Pencil className="w-4 h-4" />
+              Edit
+            </Link>
+          </div>
         </div>
 
       </div>
